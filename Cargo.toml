@@ -1,0 +1,53 @@
+[package]
+name = "afwallet-client"
+version = "0.1.0"
+authors = ["Edward Zhan zhanleewo@gmail.com"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "afwalletclient"
+path = "src/lib.rs"
+#crate-type = ["staticlib", "cdylib"]
+
+[[bin]]
+name = "afwallet-client"
+path = "src/main.rs"
+
+[dependencies]
+paillier = { git = "https://github.com/KZen-networks/rust-paillier", tag = "v0.3.4"}
+zk-paillier = { git = "https://github.com/KZen-networks/zk-paillier"}
+
+subtle = {version = "2", features = ["nightly"]}
+
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
+log = "0.4"
+clap = { version = "2.32", features = ["yaml"] }
+reqwest = "0.9.5"
+failure = "0.1.5"
+uuid = { version = "0.7", features = ["v4"] }
+electrumx_client = { git = "https://github.com/KZen-networks/rust-electrumx-client", tag = "bitcoin@0.20.0" }
+itertools = "0.8.0"
+hex = "0.3.2"
+config = "0.9"
+floating-duration = "0.1.2"
+rust-crypto = "^0.2"
+
+
+[dependencies.curv]
+git = "https://github.com/KZen-networks/curv"
+features =  ["ec_secp256k1"]
+tag = "v0.2.6"
+
+[dependencies.bitcoin]
+git = "https://github.com/tss-vault/rust-bitcoin"
+# tag = "v0.2.8"
+
+[dependencies.multi-party-ecdsa]
+git = "https://github.com/zhanleewo/multi-party-ecdsa"
+
+#[patch.crates-io]
+#rust-crypto = { git = "https://github.com/vhnatyk/rust-crypto", branch="aarch64"} #"^0.2"
