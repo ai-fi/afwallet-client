@@ -32,7 +32,7 @@ pub fn combine_pubkey_and_index(pubkey: &BigInt, index: &i32) -> BigInt {
     
     let mut pk_vec = BigInt::to_vec(&pubkey);
     let index_bz = index.to_be_bytes();
-    let index_bz1 = index.to_le_bytes();
+    //let index_bz1 = index.to_le_bytes();
     let mut index_vec = index_bz.to_vec();
     pk_vec.append(&mut index_vec);
 
@@ -61,9 +61,9 @@ pub fn hd_key(
     let f_l = &f >> 256;
     let f_r = &f & &mask;
     let f_l_fe: FE = ECScalar::from(&f_l);
-    let f_r_fe: FE = ECScalar::from(&f_r);
+    // let f_r_fe: FE = ECScalar::from(&f_r);
 
-    let bn_to_slice = BigInt::to_vec(chain_code_bi);
+    // let bn_to_slice = BigInt::to_vec(chain_code_bi);
     // let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
     let g: GE = ECPoint::generator();
     let pub_key = *pubkey + g * &f_l_fe;
@@ -84,11 +84,11 @@ pub fn hd_key(
                 let f_l = &f >> 256;
                 let f_r = &f & &mask;
                 let f_l_fe: FE = ECScalar::from(&f_l);
-                let f_r_fe: FE = ECScalar::from(&f_r);
+                //let f_r_fe: FE = ECScalar::from(&f_r);
                 let cpk = acc.0 + g * &f_l_fe;
 
                 let xxx = BigInt::to_vec(&cpk.bytes_compressed_to_big_int());
-                println!("Child PK {:?}", xxx);
+                println!("Child Pub Key {:?}", xxx);
                 (cpk, f_l_fe + &acc.1, f_r)
                 //(acc.0 + g * &f_l_fe, f_l_fe + &acc.1, &acc.2 * &f_r_fe)
             });
@@ -115,7 +115,7 @@ pub fn sign(nc: &NetworkClient, threshold: u32, message: &Vec<u8>) {
 
     //////////////////////////////////////////////////////////////////////////////
     //signup:
-    let party_i_signup_result = nc.signup();
+    let party_i_signup_result = nc.signup_sign();
     assert!(party_i_signup_result.is_ok());
     let party_i_signup = party_i_signup_result.unwrap();
     println!("{:?}", party_i_signup.clone());

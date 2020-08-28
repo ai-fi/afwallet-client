@@ -1,13 +1,17 @@
 
 // iOS bindings
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_int, c_void};
+
 
 #[macro_use] 
 extern crate  failure;
 #[macro_use]
 extern crate serde_derive;
-mod ecdsa;
+pub mod ecdsa;
+pub mod wallet;
+pub mod util;
+pub mod sdk;
 
 #[derive(Copy, PartialEq, Eq, Clone, Debug)]
 pub enum Error {
@@ -42,29 +46,90 @@ pub fn parse_address_path(path: &str) -> Option<Vec<i32>> {
     return Some(res);
 }
 
-pub fn ecdsa_keygen(server: &str, token: &str, threshold: i32, parties: i32) {
-    
+
+use crypto::aead::AeadDecryptor;
+use crypto::aead::AeadEncryptor;
+use crypto::aes::KeySize::KeySize256;
+use crypto::aes_gcm::AesGcm;
+
+use curv::arithmetic::traits::Converter;
+use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
+use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
+use curv::elliptic::curves::traits::*;
+use curv::BigInt;
+use curv::{FE, GE};
+use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
+use paillier::EncryptionKey;
+// use std::{time};
+
+
+#[no_mangle]
+pub extern "C" fn get_master_address(c_wallet_json: *const c_char, c_error: *mut c_int) -> *mut c_char {
+
+    let raw_wallet_json = unsafe { CStr::from_ptr(c_wallet_json) };
+    if raw_wallet_json.to_str().is_err() {
+        unsafe {
+            *c_error = -1
+        };
+        let null: *const c_char = std::ptr::null();
+        let mutnull: *mut c_char = null.clone() as *mut c_char;
+        return mutnull;
+    }
+    let wallet_json = raw_wallet_json.to_str().unwrap();
+
+    let (_uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
+        String,
+        Keys,
+        SharedKeys,
+        u32,
+        Vec<VerifiableSS>,
+        Vec<EncryptionKey>,
+        GE,
+        String,
+    ) = serde_json::from_str(&wallet_json).unwrap();
+    unsafe {
+        *c_error = 0;
+    };
+    let addr = util::address::pubkey_to_address(&y_sum);
+
+    CString::new(addr).unwrap().into_raw()
 }
+
+#[no_mangle]
+pub extern "C" fn ecdsa_keygen(c_connstr: *const c_char, pcb: sdk::keygen::KeyGenProgress, c_user_data: *mut c_void, c_error: *mut c_int) -> *mut c_char {
+    
+    let raw_connstr = unsafe { CStr::from_ptr(c_connstr) };
+    if raw_connstr.to_str().is_err() {
+        unsafe {
+            *c_error = -1
+        };
+        let null: *const c_char = std::ptr::null();
+        let mutnull: *mut c_char = null.clone() as *mut c_char;
+        return mutnull;
+    }
+
+    let connstr = raw_connstr.to_str().unwrap();
+    let nc = sdk::network::NetworkClient::new(connstr);
+    
+    let result = sdk::keygen::keygen(&nc, pcb, c_user_data);
+    if result.is_err() {
+        unsafe {
+            *c_error = -2
+        };
+        let null: *const c_char = std::ptr::null();
+        let mutnull: *mut c_char = null.clone() as *mut c_char;
+        return mutnull;
+    }
+
+    let keygen_json = serde_json::to_string(&result.unwrap());
+    CString::new(keygen_json.unwrap()).unwrap().into_raw()
+}
+
 
 pub fn ecdsa_sign(server: &str, token: &str, threshold: i32, parties: i32) {
     
 }
 
-#[no_mangle]
-pub extern "C" fn connect_server(c_endpoint: *const c_char, c_auth_token: *const c_char) -> bool {
-    let raw_endpoint = unsafe { CStr::from_ptr(c_endpoint) };
-    let endpoint = match raw_endpoint.to_str() {
-        Ok(s) => s,
-        Err(e) => return false,
-    };
-    let raw_auth_token = unsafe { CStr::from_ptr(c_auth_token) };
-    let auth_token = match raw_auth_token.to_str() {
-        Ok(s) => s,
-        Err(e) => return false,
-    };
-    
-    true
-}
 
 #[no_mangle]
 pub extern "C" fn c_sign_psbt(c_psbt: *const c_char) -> *mut c_char {

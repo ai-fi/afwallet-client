@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Command Example</title>
+<script src="js/qrcode.min.js"></script>
+<script type="text/javascript">
+</script>
+<style type="text/css">
+html {
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    color: #00aaff;
+}
+
+.container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: #00aaff;
+    line-height: 64px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.btn-setting-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 64px;
+    height: 64px;
+    line-height: 64px;
+    z-index: 1000;
+}
+
+.main {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 44px;
+    background-color: #ffffff;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    background-color: #eeeeee;
+    border: none;
+    border-top: #cccccc 1px solid;
+    text-align: center;
+    line-height: 44px;
+    color: #aaa;
+}
+
+.panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    font-size: 12px;
+}
+
+.pairing {
+    display: none;
+}
+
+.qrcode-container {
+    position:fixed;
+    left: calc(50% - 150px);
+    top: calc(50% - 200px);
+    width: 300px;
+    height: 400px;
+}
+
+.qrcode {
+    float: left;
+    padding: 0;
+    margin: 0px 50px 0px 50px;
+    width: 200px;
+    height: 200px;
+}
+
+.qrtitle {
+    float: left;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 44px;
+    line-height: 44px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.qrtips {
+    float: left;
+    box-sizing: content-box;
+    padding: 0 10px 0 10px;
+    margin: 0;
+    width: calc(100% - 20px);
+    max-height: 136px;
+    overflow:auto;
+    color:#aaa;
+}
+
+.signing {
+    /* text-align: center;
+    line-height: 44px; */
+    display: none;
+}
+.flipCard {
+    -webkit-perspective: 800;
+    -ms-perspective: 800;
+    -moz-perspective: 800;
+    -o-perspective: 800;
+    width: 400px;
+    height: 240px;
+    position: absolute;
+    left: calc(50% - 200px);
+    top: calc(50% - 120px);
+}
+.flipCard .card.flipped {
+    transform:rotatey(-180deg);
+    -ms-transform:rotatey(-180deg); /* IE 9 */
+    -moz-transform:rotatey(-180deg); /* Firefox */
+    -webkit-transform:rotatey(-180deg); /* Safari and Chrome */
+    -o-transform:rotatey(-180deg); /* Opera */
+}
+.flipCard .card {
+    width: 100%;
+    height: 100%;
+    -webkit-transform-style: preserve-3d;
+    -webkit-transition: 0.5s;
+    -moz-transform-style: preserve-3d;
+    -moz-transition: 0.5s;
+    -ms-transform-style: preserve-3d;
+    -ms-transition: 0.5s;
+    -o-transform-style: preserve-3d;
+    -o-transition: 0.5s;
+    transform-style: preserve-3d;
+    transition: 0.5s;
+}
+.flipCard .card .side {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    cursor: pointer;
+    position: absolute;
+    box-sizing: border-box;
+    z-index: 2;
+    backface-visibility: hidden;  /* W3C */
+    -webkit-backface-visibility: hidden; /* Safari & Chrome */
+    -moz-backface-visibility: hidden; /* Firefox */
+    -ms-backface-visibility: hidden; /* Internet Explorer */
+    -o-backface-visibility: hidden; /* Opera */
+    box-shadow: 0 0 10px rgba(0,0,0,0.6);
+    overflow: auto;
+}
+.flipCard .card .back {
+    background: white;
+    color: black;
+    transform:rotatey(-180deg);
+    -ms-transform:rotatey(-180deg); /* IE 9 */
+    -moz-transform:rotatey(-180deg); /* Firefox */
+    -webkit-transform:rotatey(-180deg); /* Safari and Chrome */
+    -o-transform:rotatey(-180deg); /* Opera */
+}
+
+.flipCard .card .front {
+    background-color: #00aaff;
+    border-radius: 10px;
+    color: white;
+}
+
+.flipCard .card .back {
+    background-color: #00ccff;
+    text-align: center;
+    color: black;
+    padding-top: 50px;
+    font-family: Georgia;
+    font-size: 2em;
+    border-radius: 10px;
+}
+.card-front-title {
+    float: left;
+    padding: 0;
+    margin: 0;
+    height: 43px;
+    line-height: 53px;
+    width: 100%;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.card-front-body {
+    padding: 0;
+    margin: 0;
+    height: 128px;
+    width: 100%;
+    /*background-color:tomato;*/
+}
+
+.card-front-footer {
+    padding: 0;
+    margin: 0;
+    height: 72px;
+    width: 100%;
+    /*background-color: salmon;*/
+    text-align: right;
+    font-size: 14px;
+}
+
+input {
+    background: none;
+    border: none;
+    background-color: #ffffff;
+    border: #00aaff 1px solid;
+    border-radius: 5px;
+    height: 30px;
+    width: 200px;
+    color: #00aaff;
+}
+
+input[type=button] {
+    background-color: #00aaff;
+    color: #ffffff;
+}
+
+.loader{
+	border:3px solid #d6336c;
+	width:200px;
+	height:200px;
+	border-radius:50%; 
+	border-left-color: transparent;
+    border-right-color: transparent;
+	animation:rotate 2s cubic-bezier(0.26, 1.36, 0.74,-0.29) infinite;
+}
+
+#loader2{
+	border:3px solid #3bc9db;
+	width:220px;
+	height:220px;
+	position:relative;
+	top:-216px;
+	border-left-color: transparent;
+  border-right-color: transparent;
+	animation:rotate2 2s cubic-bezier(0.26, 1.36, 0.74,-0.29) infinite;
+}
+
+#loader3{
+	border:3px solid #d6336c;
+	width:240px;
+	height:240px;
+	position:relative;
+	top:-452px;
+	border-left-color: transparent;
+  border-right-color: transparent;
+	animation:rotate 2s cubic-bezier(0.26, 1.36, 0.74,-0.29) infinite;
+}
+
+#loader4{
+	border:3px solid #3bc9db;
+	width:260px;
+	height:260px;
+	position:relative;
+	top:-708px;
+	border-left-color: transparent;
+  border-right-color: transparent;
+	animation:rotate2 2s cubic-bezier(0.26, 1.36, 0.74,-0.29) infinite;
+}
+@keyframes rotate{
+	0%{transform:rotateZ(-360deg)}
+	100%{transform:rotateZ(0deg)}
+}
+@keyframes rotate2{
+	0%{transform:rotateZ(360deg)}
+	100%{transform:rotateZ(0deg)}
+}
+#text{
+	color:#00aaff;
+	font-family:Arial;
+	font-size:20px;
+	position:relative;
+	top:-857px;
+}
+</style>
+<script type="text/javascript">
+let ec_not_json = -20001;
+
+$ = function(attr) {
+    var elts = null;
+    if (attr.indexOf('.') == 0) {
+        elts = document.getElementsByClassName(attr.substring(1));
+    } else if (attr.indexOf('#') == 0) {
+        let elt = document.getElementById(attr.substring(1)); 
+        elts = (elt == null) ? null : [elt];
+    } else { 
+        elts = document.getElementsByName(attr); 
+    }
+    return (elts == null || elts.length == 0) ? null : elts[0];
+}
+
+ajax = function(url, method, data, cb) {
+    method = method ? method.toUpperCase() : 'GET';
+
+    var request = new XMLHttpRequest();
+    
+    request.open(method, url);
+    request.onreadystatechange = function() {
+        if (this.readyState === 0) { // Unsent
+
+        } else if (this.readyState === 1) { // Opened
+
+        } else if (this.readyState === 2) { // Headers received
+
+        } else if (this.readyState === 3) { // loading
+
+        } else if (this.readyState === 4) { // Done
+            if(this.status === 200) {
+                try {
+                    var result = JSON.parse(this.responseText)
+                    cb(result, {code: 0, msg: "success"});
+                } catch (e) {
+                    cb(null, {code: ec_not_json, msg: e.message});
+                };
+            } else {
+                cb(null, {code: this.status, msg: 'http error'})
+            }
+        } 
+    };
+
+    if (method == 'POST') {
+        request.setRequestHeader("Content-type", "application/json");
+        request.send(JSON.stringify(data));
+    } else {
+        request.send();
+    }
+}
+
+function ping(cb) {
+    ajax('/api/ping', 'get', null, function(data, error) {
+        if (error == null) {
+            cb(null);
+            return;
+        }
+        if (error != null && error.code == ec_not_json) {
+            cb(null);
+            return;
+        }
+
+        cb(error || {code: -1, msg: "unknown"})
+    });
+
+}
+function getVaultStatus(cb) {
+    ajax('/api/vault/status', 'get', null, function(data, error) {
+        cb(data, error || {code: -1, msg: "unknown"})
+    });
+}
+function getPairingInfo(cb) {
+    ajax('/api/vault/pairing_info', 'get', null, function(data, error) {
+        cb(data, error || {code: -1, msg: "unknown"})
+    });
+}
+function getDefaultWallet(cb) {
+    ajax('/api/wallet/default', 'get', null, function(data, error) {
+        cb(data, error || {code: -1, msg: "unknown"})
+    });
+}
+function routeToPairing() {
+    getPairingInfo(function(pairingInfo, error) {
+        $('#page-loader').style.display = 'none';
+        if (error.code != 0 || pairingInfo == null) {
+            return
+        }
+
+        let connstr = JSON.stringify(pairingInfo);
+        var qrcode = new QRCode($(".qrcode"), {
+            width : 200,
+            height : 200
+        });
+        qrcode.clear();
+        qrcode.makeCode(connstr);
+        $('.pairing').style.display = 'inline';
+    })
+}
+
+function routeToSigning() {
+    getDefaultWallet(function(data, error) {
+
+        $('#page-loader').style.display = 'none';
+        if (error.code != 0 || data == null) {
+            return
+        }
+        $('.card-front-footer').innerHTML = data[1] + '<br />' + data[2];
+        $('.signing').style.display = 'inline';
+    })
+
+}
+
+window.onload = function() {
+    //$('#page-loader').style.display = 'none';
+    ping(function(error){
+        if (error != null) {
+            $('#page-loader').style.display = 'none';
+            return;
+        }
+
+        getVaultStatus(function(status, error) {
+            if (error.code != 0 || status == null) {
+                $('#page-loader').style.display = 'none';
+                return;
+            }
+            if (status.is_ready) {
+                routeToSigning();
+            } else {
+                routeToPairing();
+            }
+        });
+    })
+    /*
+    var qrcode = new QRCode($(".qrcode"), {
+        width : 200,
+        height : 200
+    });
+    qrcode.clear();
+	qrcode.makeCode('{"server": "http://192.168.255.255:8100", "authType": "none"}');
+    setTimeout(function() {
+        $('#page-loader').style.display = 'none';
+        $('.signing').style.display = 'inline';
+    }, 500);
+    */
+}
+</script>
+</head>
+<body>
+<div class="container">
+    <nav class="header">
+        Ai-Fi Vault
+        <div class="btn-setting-container">
+            <a>
+                <img src="img/more.png" />
+            </a>
+        </div>
+    </nav>
+    <div class="main">
+        <center style="padding-top: 100px;" id="page-loader">
+            <div class="loader" id="loader"></div>
+            <div class="loader" id="loader2"></div>
+            <div class="loader" id="loader3"></div>
+            <div class="loader" id="loader4"></div>
+            <span id="text">LOADING...</span><br>
+        </center>
+
+        <div class="panel pairing">
+            <div class="qrcode-container">
+                <div class="qrcode">
+                    
+                </div>
+                <div class="qrtitle">Pair with your Phone</div>
+                <div class="qrtips">
+                    <p>你的Ai-Fi Vault还没有初始化.
+                    请在你手机上用Ai-Fi Vault扫描这个二维码进行配对.</p>
+                    <p>
+                        如果你已经初始化过Ai-Fi Vault，你可以尝试<a href="#">恢复已有的Ai-Fi Vault</a>.
+                    </p>
+                    <p>
+                        如果你还有疑问，请<a href="#">点击此处了解更多</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="panel signing">
+            <div class="flipCard"> 
+                <div class="card" onclick="this.classList.toggle('flipped');"> 
+                  <div class="side front">
+                    <div class="card-front-body">
+                        <div class="card-front-title">
+                            <img src="img/bitcoin-24.png" style="vertical-align: middle;" /> BITCOIN
+                        </div>
+                    </div>
+                      <div class="card-front-footer">
+
+                        17AxdraXJ1kcsiho7kYYwQCap6xLJpptd2<br />
+                        m/84'/0'/0'
+                      </div>
+                  </div> 
+                  <div class="side back">Definition<br/>Explanation</div> 
+                </div> 
+              </div> 
+        </div>
+    </div>
+    <nav class="footer">
+        Powered by Ai-Fi.net
+    </nav>
+</div>
+</body>
+</html>

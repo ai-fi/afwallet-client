@@ -23,12 +23,10 @@ use curv::BigInt;
 use curv::{FE, GE};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
 use paillier::EncryptionKey;
-use std::env;
-use std::fs;
 use std::iter::repeat;
 use std::{time};
 use super::network::*;
-
+/*
 #[derive(Hash, PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct TupleKey {
     pub first: String,
@@ -47,6 +45,7 @@ pub struct AEAD {
 pub struct PartySignup {
     pub number: u32,
     pub uuid: String,
+    pub chaincode: String,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -65,24 +64,37 @@ pub struct Params {
     pub parties: String,
     pub threshold: String,
 }
+*/
 
-
-pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
+pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) -> Result<(
+    Keys,
+    SharedKeys,
+    u32,
+    Vec<VerifiableSS>,
+    Vec<EncryptionKey>,
+    GE,
+    String
+), String> {
     
     // delay:
-    let delay = time::Duration::from_millis(25);
+    let delay = time::Duration::from_millis(100);
     let parames = Parameters {
         threshold: threshold as usize,
         share_count: parties as usize,
     };
 
     //signup:
-    let party_i_signup_result = nc.signup();
-    assert!(party_i_signup_result.is_ok());
+    let party_i_signup_result = nc.signup_keygen();
+    if party_i_signup_result.is_err() {
+        return Err(String::from("Failed to signup keygen"));
+    }
+    // assert!(party_i_signup_result.is_ok());
+    
     let party_i_signup = party_i_signup_result.unwrap();
     println!("{:?}", party_i_signup.clone());
     let party_num_int = party_i_signup.number.clone();
     let uuid = party_i_signup.uuid;
+    let chaincode = party_i_signup.chaincode;
 
     let party_keys = Keys::create(party_num_int.clone() as usize);
     let (bc_i, decom_i) = party_keys.phase1_broadcast_phase3_proof_of_correct_key();
@@ -90,13 +102,15 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
     //////////////////////////////////////////////////////////////////////////////
 
     // send commitment to ephemeral public keys, get round 1 commitments of other parties
-    assert!(nc.broadcast(
+    if nc.broadcast(
         party_num_int.clone(),
         "round1",
         serde_json::to_string(&bc_i).unwrap(),
         uuid.clone()
-    )
-    .is_ok());
+    ).is_err() {
+        return Err(String::from("Failed to send commitment to ephemeral public keys, get round 1 commitments of other parties"));
+    }
+
     let round1_ans_vec = nc.poll_for_broadcasts(
         party_num_int.clone(),
         parties,
@@ -120,13 +134,15 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
         .collect::<Vec<KeyGenBroadcastMessage1>>();
 
     // round 2: send ephemeral public keys and  check commitments correctness
-    assert!(nc.broadcast(
+    if nc.broadcast(
         party_num_int.clone(),
         "round2",
         serde_json::to_string(&decom_i).unwrap(),
         uuid.clone()
     )
-    .is_ok());
+    .is_err() {
+        return Err(String::from("Failed to send ephemeral public keys and  check commitments correctness"));
+    }
     let round2_ans_vec = nc.poll_for_broadcasts(
         party_num_int.clone(),
         parties,
@@ -189,14 +205,16 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
                 ciphertext: out.to_vec(),
                 tag: out_tag.to_vec(),
             };
-            assert!(nc.sendp2p(
+            if nc.sendp2p(
                 party_num_int.clone(),
                 i,
                 "round3",
                 serde_json::to_string(&aead_pack_i).unwrap(),
                 uuid.clone()
             )
-            .is_ok());
+            .is_err() {
+                return Err(String::from("Failed to dispatch share key"));
+            }
             j = j + 1;
         }
         k = k + 1;
@@ -234,13 +252,15 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
     //////////////////////////////////////////////////////////////////////////////
 
     // round 4: send vss commitments
-    assert!(nc.broadcast(
+    if nc.broadcast(
         party_num_int.clone(),
         "round4",
         serde_json::to_string(&vss_scheme).unwrap(),
         uuid.clone()
     )
-    .is_ok());
+    .is_err() {
+        return Err(String::from("Failed to send vss commitments"));
+    }
     let round4_ans_vec = nc.poll_for_broadcasts(
         party_num_int.clone(),
         parties,
@@ -273,13 +293,15 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
 
     //////////////////////////////////////////////////////////////////////////////
     // round 5: send vss commitments
-    assert!(nc.broadcast(
+    if nc.broadcast(
         party_num_int.clone(),
         "round5",
         serde_json::to_string(&dlog_proof).unwrap(),
         uuid.clone()
     )
-    .is_ok());
+    .is_err() {
+        return Err(String::from("Failed to send vss commitments (dlog_proof)"));
+    }
     let round5_ans_vec = nc.poll_for_broadcasts(
         party_num_int.clone(),
         parties,
@@ -307,6 +329,14 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
         .map(|i| bc1_vec[i as usize].e.clone())
         .collect::<Vec<EncryptionKey>>();
 
+    Ok((party_keys,
+        shared_keys,
+        party_num_int,
+        vss_scheme_vec,
+        paillier_key_vec,
+        y_sum,
+        chaincode))
+    /*
     let keygen_json = serde_json::to_string(&(
         party_keys,
         shared_keys,
@@ -318,4 +348,5 @@ pub fn keygen(nc: &NetworkClient, threshold: u32, parties: u32) {
     .unwrap();
 
     fs::write(env::args().nth(2).unwrap(), keygen_json).expect("Unable to save !");
+    */
 }

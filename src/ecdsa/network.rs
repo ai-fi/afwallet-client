@@ -13,6 +13,7 @@ extern crate serde_json;
 use reqwest::Client;
 use std::time::Duration;
 use std::{thread};
+use serde_json::{Value, Map};
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct TupleKey {
@@ -32,6 +33,7 @@ pub struct AEAD {
 pub struct PartySignup {
     pub number: u32,
     pub uuid: String,
+    pub chaincode: String,
 }
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -51,33 +53,40 @@ pub struct Params {
 }
 
 pub struct NetworkClient {
-    pub server: String,
-    pub credential: String,
+    pub connInfo: Map<String, Value>,
     client: Client,
 }
 
 impl NetworkClient {
-    pub fn new(server: &str, credential: &str) -> NetworkClient {
+    pub fn new(connstr: &String) -> NetworkClient {
+        let parsed: Value = serde_json::from_str(connstr).expect("Invalid connstr");
+        let connInfo: Map<String, Value> = parsed.as_object().expect("Invalid connjson").clone();
+        connInfo.get("server").expect("Not have a server address");
+        
+
         let client = Client::new();
         NetworkClient{
-            server: String::from(server),
-            credential: String::from(credential),
+            connInfo: connInfo,
             client: client
         }
     }
         
+    fn get_server(&self) -> String {
+        let server = self.connInfo.get("server").unwrap().as_str().unwrap();
+        String::from(server)
+    }
     pub fn postb<T>(&self, path: &str, body: T) -> Option<String>
     where
         T: serde::ser::Serialize,
     {
         let res = self.client
-            .post(&format!("{}/{}", self.server, path))
+            .post(&format!("{}/{}", self.get_server(), path))
             .json(&body)
             .send();
         Some(res.unwrap().text().unwrap())
     }
 
-    pub fn signup(&self) -> Result<PartySignup, ()> {
+    pub fn signup_keygen(&self) -> Result<PartySignup, ()> {
         let key = TupleKey {
             first: "signup".to_string(),
             second: "keygen".to_string(),
@@ -86,6 +95,20 @@ impl NetworkClient {
         };
 
         let res_body = self.postb("signupkeygen", key).unwrap();
+        println!("{}", res_body);
+        let answer: Result<PartySignup, ()> = serde_json::from_str(&res_body).unwrap();
+        return answer;
+    }
+    
+    pub fn signup_sign(&self) -> Result<PartySignup, ()> {
+        let key = TupleKey {
+            first: "signup".to_string(),
+            second: "keygen".to_string(),
+            third: "".to_string(),
+            fourth: "".to_string(),
+        };
+
+        let res_body = self.postb("signupsign", key).unwrap();
         let answer: Result<PartySignup, ()> = serde_json::from_str(&res_body).unwrap();
         return answer;
     }
