@@ -502,12 +502,6 @@ impl KeyGenContext {
 
 }
 
-#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub struct RequestMessage {
-    pub uuid: String,
-    pub message: String,
-}
-
 fn generate_chaincode() -> String {
     let u: FE = ECScalar::new_random();
     let y = &ECPoint::generator() * &u;

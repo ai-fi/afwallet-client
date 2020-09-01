@@ -16,8 +16,12 @@ name = "afwallet-client"
 path = "src/main.rs"
 
 [[bin]]
-name = "afwallet-helper"
-path = "src/helper.rs"
+name = "afwallet-keygencli"
+path = "src/keygencli.rs"
+
+[[bin]]
+name = "afwallet-signcli"
+path = "src/signcli.rs"
 
 [dependencies]
 paillier = { git = "https://github.com/KZen-networks/rust-paillier", tag = "v0.3.4"}

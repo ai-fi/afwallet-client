@@ -90,7 +90,7 @@ pub extern "C" fn get_master_address(c_wallet_json: *const c_char, c_error: *mut
     unsafe {
         *c_error = 0;
     };
-    let addr = util::address::pubkey_to_address(&y_sum);
+    let addr = util::address::pubkey_to_address(&y_sum, &bitcoin::network::constants::Network::Testnet);
 
     CString::new(addr).unwrap().into_raw()
 }

@@ -10,7 +10,15 @@
 pub mod ping;
 pub mod vault;
 pub mod keygen;
+pub mod sign;
 pub mod wallet;
+
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct RequestMessage {
+    pub uuid: String,
+    pub message: String,
+}
 
 #[derive(Debug)]
 pub enum VaultStruct {

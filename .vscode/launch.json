@@ -44,15 +44,33 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'afwallet-helper'",
+            "name": "Debug executable 'afwallet-keygencli'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=afwallet-helper",
+                    "--bin=afwallet-keygencli",
                     "--package=afwallet-client"
                 ],
                 "filter": {
-                    "name": "afwallet-helper",
+                    "name": "afwallet-keygencli",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'afwallet-signcli'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=afwallet-signcli",
+                    "--package=afwallet-client"
+                ],
+                "filter": {
+                    "name": "afwallet-signcli",
                     "kind": "bin"
                 }
             },

@@ -23,6 +23,7 @@ use curv::{FE, GE};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
 use paillier::EncryptionKey;
 use std::iter::repeat;
+
 // use std::{time};
 
 
@@ -32,7 +33,7 @@ pub fn get_default(
     state: State<Config>,
     db_mtx: State<RwLock<HashMap<String, String>>>,
     claim: Claims,
-) -> Result<Json<(String, String, String)>> {
+) -> Result<Json<(String, String, String, String)>> {
 
     let vault_wallet_ids_id = String::from("vault_wallet_ids_id");
     let result: Vec<String> = db::get(&state.db, &claim.sub, &vault_wallet_ids_id, &VaultStruct::VaultWalletIDs)?
@@ -43,7 +44,7 @@ pub fn get_default(
     .ok_or(format_err!("No data for such identifier {}", wallet_id))?;
     
 
-    let (uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
+    let (uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, chaincode): (
         String,
         Keys,
         SharedKeys,
@@ -53,6 +54,11 @@ pub fn get_default(
         GE,
         String,
     ) = serde_json::from_str(&wallet_data)?;
-    let addr = super::super::super::util::address::pubkey_to_address(&y_sum);
-    Ok(Json((uuid, addr, String::from("m/84'/0'/0'"))))
+
+    let xpubstr = "0488b21e010a2683ed00000000d970c5e49aa52f3e074c2dc1f8eb4f08fd12c594cbde161dffc722ae0b7bafcf0212b55b9431515c7185355f15b48c5e1a1bbfa31af61429fa2bb8709de722f420767a344a";
+    let data = hex::decode(&xpubstr).unwrap();
+    let b58 = bitcoin::util::base58::encode_slice(&data);
+    let xpub = super::super::super::util::address::zpub_from(&y_sum, &chaincode);
+    let addr = super::super::super::util::address::pubkey_to_address(&y_sum, &bitcoin::network::constants::Network::Testnet);
+    Ok(Json((uuid, addr, String::from("m/84'/0'/0'"), xpub)))
 }
