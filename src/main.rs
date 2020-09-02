@@ -111,11 +111,66 @@ fn test_psbt() {
     
 }
 
+use std::process::exit;
+use std::iter;
+use qrcode::QrCode;
+
+fn display_qrcode() {
+    let ip = util::local_ip::get().unwrap();
+    let server = format!("http://{}:{}", ip, 8000);
+    let info = web::routes::vault::PairingInfo {
+        server: server,
+        auth: String::from(""),
+    };
+    let code = serde_json::to_string(&info).unwrap().into_bytes();
+
+    let code = match QrCode::new(&code[..]) {
+        Ok(code) => code,
+        Err(e) => {
+            println!("Can't generate QR code: {:?}", e);
+            exit(1)
+        }
+    };
+
+    let string = code.render()
+        .light_color(' ')
+        .dark_color('#')
+        .build();
+
+    let mut empty_str: String;
+    let mut line_buffer = String::new();
+    let mut lines = string.lines().into_iter();
+
+    while let Some(line_top) = lines.next() {
+        let line_bottom = match lines.next() {
+            Some(l) => l,
+            None => {
+                empty_str = iter::repeat(' ').take(line_top.len()).collect();
+                empty_str.as_str()
+            }
+        };
+
+        for (top, bottom) in line_top.chars().zip(line_bottom.chars()) {
+            let block = match (top, bottom) {
+                ('#', '#') => '█',
+                (' ', '#') => '▄',
+                ('#', ' ') => '▀',
+                _ => ' ',
+            };
+            line_buffer.push(block);
+        }
+
+        println!("{}", line_buffer);
+        line_buffer.clear();
+    }
+}
 fn main() {  
     let run_psbt_test = false;
     if run_psbt_test {
         test_psbt();
     }
+
+    display_qrcode();
 
     web::server::get_server().launch();
 }
