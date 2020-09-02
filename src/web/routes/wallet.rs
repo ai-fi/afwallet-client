@@ -1,28 +1,29 @@
-use uuid::Uuid;
+//use uuid::Uuid;
 use super::super::Result;
 use rocket::State;
 use rocket_contrib::json::Json;
-use std::collections::HashMap;
-use std::sync::RwLock;
+//use std::collections::HashMap;
+//use std::sync::RwLock;
 use super::super::auth::jwt::Claims;
 use super::super::storage::db;
 use super::super::Config;
 use super::*;
 
-use crypto::aead::AeadDecryptor;
-use crypto::aead::AeadEncryptor;
-use crypto::aes::KeySize::KeySize256;
-use crypto::aes_gcm::AesGcm;
+//use crypto::aead::AeadDecryptor;
+//use crypto::aead::AeadEncryptor;
+//use crypto::aes::KeySize::KeySize256;
+//use crypto::aes_gcm::AesGcm;
 
-use curv::arithmetic::traits::Converter;
-use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
+//use curv::arithmetic::traits::Converter;
+//use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
-use curv::elliptic::curves::traits::*;
-use curv::BigInt;
-use curv::{FE, GE};
+//use curv::elliptic::curves::traits::*;
+//use curv::BigInt;
+//use curv::{FE, GE};
+use curv::{GE};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
 use paillier::EncryptionKey;
-use std::iter::repeat;
+// use std::iter::repeat;
 
 // use std::{time};
 
@@ -31,7 +32,7 @@ use std::iter::repeat;
 #[get("/wallet/default")]
 pub fn get_default(
     state: State<Config>,
-    db_mtx: State<RwLock<HashMap<String, String>>>,
+    // db_mtx: State<RwLock<HashMap<String, String>>>,
     claim: Claims,
 ) -> Result<Json<(String, String, String, String)>> {
 
@@ -44,7 +45,7 @@ pub fn get_default(
     .ok_or(format_err!("No data for such identifier {}", wallet_id))?;
     
 
-    let (uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, chaincode): (
+    let (uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
         String,
         Keys,
         SharedKeys,
@@ -55,10 +56,12 @@ pub fn get_default(
         String,
     ) = serde_json::from_str(&wallet_data)?;
 
-    let xpubstr = "0488b21e010a2683ed00000000d970c5e49aa52f3e074c2dc1f8eb4f08fd12c594cbde161dffc722ae0b7bafcf0212b55b9431515c7185355f15b48c5e1a1bbfa31af61429fa2bb8709de722f420767a344a";
-    let data = hex::decode(&xpubstr).unwrap();
-    let b58 = bitcoin::util::base58::encode_slice(&data);
-    let xpub = super::super::super::util::address::zpub_from(&y_sum, &chaincode);
+    // let xpubstr = "0488b21e010a2683ed00000000d970c5e49aa52f3e074c2dc1f8eb4f08fd12c594cbde161dffc722ae0b7bafcf0212b55b9431515c7185355f15b48c5e1a1bbfa31af61429fa2bb8709de722f420767a344a";
+    // let data = hex::decode(&xpubstr).unwrap();
+    // let b58 = bitcoin::util::base58::encode_slice(&data);
+    // let xpub = super::super::super::util::address::zpub_from(&y_sum, &chaincode);
+    let xpub = String::new();
     let addr = super::super::super::util::address::pubkey_to_address(&y_sum, &bitcoin::network::constants::Network::Testnet);
-    Ok(Json((uuid, addr, String::from("m/84'/0'/0'"), xpub)))
+    let path = String::from("m/84'/0'/0'");
+    Ok(Json((uuid, addr, path, xpub)))
 }

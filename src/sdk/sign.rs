@@ -22,17 +22,19 @@ use curv::elliptic::curves::traits::*;
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::*;
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
 use paillier::*;
-use reqwest::Client;
-use std::env;
-use std::fs;
-use std::time::Duration;
-use std::{thread, time};
+// use reqwest::Client;
+// use std::env;
+// use std::fs;
+// use std::time::Duration;
+// use std::{thread, time};
 use curv::{BigInt, FE, GE};
 use std::os::raw::{c_int, c_void};
 
 use super::Result;
 use super::network::*;
 
+// use bitcoin::util::bip143::SighashComponents;
+// use bitcoin::consensus::encode::serialize;
 
 fn format_vec_from_reads<'a, T: serde::Deserialize<'a> + Clone>(
     ans_vec: &'a Vec<String>,
@@ -87,9 +89,9 @@ pub fn hd_key(
     let f_l = &f >> 256;
     let f_r = &f & &mask;
     let f_l_fe: FE = ECScalar::from(&f_l);
-    let f_r_fe: FE = ECScalar::from(&f_r);
+    let _f_r_fe: FE = ECScalar::from(&f_r);
 
-    let bn_to_slice = BigInt::to_vec(chain_code_bi);
+    let _bn_to_slice = BigInt::to_vec(chain_code_bi);
     // let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
     let g: GE = ECPoint::generator();
     let pub_key = *pubkey + g * &f_l_fe;
@@ -110,7 +112,7 @@ pub fn hd_key(
                 let f_l = &f >> 256;
                 let f_r = &f & &mask;
                 let f_l_fe: FE = ECScalar::from(&f_l);
-                let f_r_fe: FE = ECScalar::from(&f_r);
+                let _f_r_fe: FE = ECScalar::from(&f_r);
                 let cpk = acc.0 + g * &f_l_fe;
 
                 let xxx = BigInt::to_vec(&cpk.bytes_compressed_to_big_int());
@@ -159,6 +161,8 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     let party_num_int: u32 = party_id.clone();
 
     println!("y_sum: {:?}", y_sum);
+    println!("chaincode: {:?}", chaincode);
+    println!("y_sum_xcood: {:?}", y_sum.bytes_compressed_to_big_int().to_str_radix(16));
     
     let init_str = format!("init:{:}:{:}:{:}", path.clone(), hex::encode(msg), party_num_int);
     // round0: 
@@ -174,6 +178,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     if party_id == peer_party_id {
         return Err(format_err!("Invalid part_id ({:})", party_id));
     }
+    pcb(0, c_user_data);
     
     let mut signers_vec: Vec<usize> = Vec::new();
     signers_vec.push((peer_party_id - 1) as usize);
@@ -194,7 +199,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
         Ok(cci) => cci
     };
     let (y_sum_child, f_l_new, _cc_new) = hd_key(location_in_hir.clone(), &y_sum, &chain_code_bi);
-
+    println!("PubKey derive at ({:}) is {:}", path, y_sum_child.bytes_compressed_to_big_int().to_str_radix(16));
 
 
 
@@ -276,6 +281,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     if signers_vec.len() != bc1_vec.len() {
         return Err(format_err!("Need more signers"));
     }
+    pcb(1, c_user_data);
 
     // round2:
     //////////////////////////////////////////////////////////////////////////////
@@ -306,7 +312,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     }
     
     req.message = serde_json::to_string(&(m_b_gamma_send_vec[0].clone(), m_b_w_send_vec[0].clone()))?;
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
 
     let mut round2_ans_vec: Vec<String> = Vec::new(); 
     round2_ans_vec.push(resp.clone());
@@ -356,6 +362,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
             j = j + 1;
         }
     }
+    pcb(2, c_user_data);
 
 
     //////////////////////////////////////////////////////////////////////////////
@@ -365,7 +372,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
 
 
     req.message = serde_json::to_string(&delta_i).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     
     let mut round3_ans_vec: Vec<String> = Vec::new();
     round3_ans_vec.push(resp);
@@ -378,11 +385,12 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
         &mut delta_vec,
     );
     let delta_inv = SignKeys::phase3_reconstruct_delta(&delta_vec);
+    pcb(3, c_user_data);
 
     //////////////////////////////////////////////////////////////////////////////
     // decommit to gamma_i
     req.message = serde_json::to_string(&decommit).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     let mut round4_ans_vec: Vec<String> = Vec::new();
     round4_ans_vec.push(resp);
     
@@ -398,11 +406,12 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     let b_proof_vec = (0..m_b_gamma_rec_vec.len())
         .map(|i| &m_b_gamma_rec_vec[i].b_proof)
         .collect::<Vec<&DLogProof>>();
-    let R = SignKeys::phase4(&delta_inv, &b_proof_vec, decommit_vec, &bc1_vec)
+    let sig_r = SignKeys::phase4(&delta_inv, &b_proof_vec, decommit_vec, &bc1_vec)
         .expect("bad gamma_i decommit");
 
     // adding local g_gamma_i
-    let R = R + decomm_i.g_gamma_i * &delta_inv;
+    let sig_r = sig_r + decomm_i.g_gamma_i * &delta_inv;
+    pcb(4, c_user_data);
 
     // we assume the message is already hashed (by the signer).
 
@@ -411,13 +420,13 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     let two = BigInt::from(2);
     let message_bn = message_bn.modulus(&two.pow(256));
     let local_sig =
-        LocalSignature::phase5_local_sig(&sign_keys.k_i, &message_bn, &R, &sigma, &y_sum);
+        LocalSignature::phase5_local_sig(&sign_keys.k_i, &message_bn, &sig_r, &sigma, &y_sum);
 
     let (phase5_com, phase_5a_decom, helgamal_proof) = local_sig.phase5a_broadcast_5b_zkproof();
 
     //phase (5A)  broadcast commit
     req.message = serde_json::to_string(&phase5_com).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     let mut round5_ans_vec: Vec<String> = Vec::new();
     round5_ans_vec.push(resp);
 
@@ -428,10 +437,11 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
         phase5_com,
         &mut commit5a_vec,
     );
+    pcb(5, c_user_data);
 
     //phase (5B)  broadcast decommit and (5B) ZK proof
     req.message = serde_json::to_string(&(phase_5a_decom.clone(), helgamal_proof.clone())).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     let mut round6_ans_vec: Vec<String> = Vec::new();
     round6_ans_vec.push(resp);
     
@@ -457,13 +467,14 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
             &commit5a_vec,
             &phase_5a_elgamal_vec,
             &phase_5a_decom.V_i,
-            &R.clone(),
+            &sig_r.clone(),
         )
         .expect("error phase5");
+    pcb(7, c_user_data);
 
     //////////////////////////////////////////////////////////////////////////////
     req.message = serde_json::to_string(&phase5_com2).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     let mut round7_ans_vec: Vec<String> = Vec::new();
     round7_ans_vec.push(resp);
 
@@ -474,10 +485,11 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
         phase5_com2,
         &mut commit5c_vec,
     );
+    pcb(7, c_user_data);
 
     //phase (5B)  broadcast decommit and (5B) ZK proof
     req.message = serde_json::to_string(&phase_5d_decom2).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     let mut round8_ans_vec: Vec<String> = Vec::new();
     round8_ans_vec.push(resp);
 
@@ -488,6 +500,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
         phase_5d_decom2.clone(),
         &mut decommit5d_vec,
     );
+    pcb(8, c_user_data);
 
     let phase_5a_decomm_vec_includes_i = (0..threshold + 1)
         .map(|i| decommit5a_and_elgamal_vec_includes_i[i as usize].0.clone())
@@ -502,7 +515,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
 
     //////////////////////////////////////////////////////////////////////////////
     req.message = serde_json::to_string(&s_i).unwrap();
-    let (sign_uuid, resp) = nc.sign(&req)?;
+    let (_sign_uuid, resp) = nc.sign(&req)?;
     let mut round9_ans_vec: Vec<String> = Vec::new();
     round9_ans_vec.push(resp);
     
@@ -518,6 +531,8 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     let sig = local_sig
         .output_signature(&s_i_vec)
         .expect("verification failed");
+
+    pcb(9, c_user_data);
     println!(" \n");
     println!("party {:?} Output Signature: \n", party_num_int);
     println!("R: {:?}", sig.r);
@@ -532,10 +547,70 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
         (BigInt::from(&(sig.s.get_element())[..])).to_str_radix(16),
     ))
         .unwrap();
+    println!("signature: {:}", sign_json);
     println!("verifying signature with public key");
     verify(&sig, &y_sum, &message_bn).expect("false");
     println!("verifying signature with child pub key");
     //verify(&sig, &new_key, &message_bn).expect("false");
-    fs::write("signature".to_string(), sign_json).expect("Unable to save !");
+    // fs::write("signature".to_string(), sign_json).expect("Unable to save !");
     return Ok(sig.clone());
+}
+
+use bitcoin::util::bip32::{DerivationPath, Fingerprint};
+use bitcoin::PublicKey;
+
+pub fn sign_psbt(nc: &NetworkClient, wallet: &String, psbt: &bitcoin::util::psbt::PartiallySignedTransaction, pcb: SignProgress, c_user_data: *mut c_void) -> Result<bitcoin::util::psbt::PartiallySignedTransaction> {
+    let mut signed_psbt = psbt.clone();
+    let p_signed_psbt: &mut bitcoin::util::psbt::PartiallySignedTransaction = &mut signed_psbt;
+    let tx = &p_signed_psbt.global.unsigned_tx;
+    let inputs: &mut Vec<bitcoin::util::psbt::Input> = &mut p_signed_psbt.inputs;
+    
+    for i in 0..inputs.len() {
+        // let tx_input: &bitcoin::TxIn = tx.input.get(i).unwrap();
+        let input: &mut bitcoin::util::psbt::Input = inputs.get_mut(i).unwrap();
+        let utxo = input.witness_utxo.as_ref().unwrap();
+        let (pubkey, (_fingerprint, path)) :(&PublicKey, &(Fingerprint, DerivationPath)) = input.hd_keypaths.first_key_value().unwrap();
+
+        /*
+        let comp = SighashComponents::new(tx);
+        let sig_hash = comp.sighash_all(
+            tx_input,
+            &bitcoin::Address::p2pkh(
+                pubkey,
+                bitcoin::network::constants::Network::Bitcoin
+            ).script_pubkey(),
+            (utxo.value as u32).into(),
+        );
+        */
+        let mut cache = bitcoin::util::bip143::SigHashCache::new(tx);
+        let script = &utxo.script_pubkey;
+        let sighash_type = input.sighash_type.unwrap();
+        let sig_hash = cache.signature_hash(i, script, utxo.value, sighash_type);
+        
+        
+        let msg = &sig_hash[..];
+        let n = msg.len();
+        let mut msg_vec: Vec<u8> = Vec::new();
+        for i in 0..n {
+            msg_vec.push(msg[i]);
+        }
+
+        let spath = format!("{:}", path);
+
+        let signature = sign(nc, wallet, &spath, &msg_vec, pcb, c_user_data)?;
+
+        //let mut sig_vec = signature.serialize_der().to_vec();
+        let mut v = BigInt::to_vec(&signature.r.to_big_int());
+        v.extend(BigInt::to_vec(&signature.s.to_big_int()));
+
+        let sig = bitcoin::secp256k1::Signature::from_compact(&v[..])?;
+        let sig_vec = sig.serialize_der().to_vec();
+        let pk_vec = pubkey.to_bytes();
+        input.final_script_witness = Some(vec![sig_vec, pk_vec]);
+        // let mut sig_vec = signature.serialize_der().to_vec();
+
+        // let pk_vec = pk.serialize().to_vec();
+        // input.final_script_witness = vec![sig_vec, pk_vec];
+    }
+    return Ok(signed_psbt);
 }

@@ -10,10 +10,10 @@ use super::super::storage::db;
 use super::super::Config;
 use super::*;
 
-use crypto::aead::AeadDecryptor;
-use crypto::aead::AeadEncryptor;
-use crypto::aes::KeySize::KeySize256;
-use crypto::aes_gcm::AesGcm;
+//use crypto::aead::AeadDecryptor;
+//use crypto::aead::AeadEncryptor;
+//use crypto::aes::KeySize::KeySize256;
+//use crypto::aes_gcm::AesGcm;
 
 use curv::arithmetic::traits::Converter;
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
@@ -23,7 +23,7 @@ use curv::BigInt;
 use curv::{FE, GE};
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
 use paillier::EncryptionKey;
-use std::iter::repeat;
+//use std::iter::repeat;
 // use std::{time};
 
 use curv::cryptographic_primitives::hashing::hmac_sha512;
@@ -31,13 +31,13 @@ use curv::cryptographic_primitives::proofs::sigma_correct_homomorphic_elgamal_en
 use curv::cryptographic_primitives::hashing::traits::KeyedHash;
 
 use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::mta::*;
-use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
-use paillier::*;
-use reqwest::Client;
-use std::env;
-use std::fs;
-use std::time::Duration;
-use std::{thread, time};
+//use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2018::party_i::*;
+//use paillier::*;
+//use reqwest::Client;
+//use std::env;
+//use std::fs;
+//use std::time::Duration;
+//use std::{thread, time};
 
 
 
@@ -74,9 +74,9 @@ pub fn hd_key(
     let f_l = &f >> 256;
     let f_r = &f & &mask;
     let f_l_fe: FE = ECScalar::from(&f_l);
-    let f_r_fe: FE = ECScalar::from(&f_r);
+    let _f_r_fe: FE = ECScalar::from(&f_r);
 
-    let bn_to_slice = BigInt::to_vec(chain_code_bi);
+    let _bn_to_slice = BigInt::to_vec(chain_code_bi);
     // let chain_code = GE::from_bytes(&bn_to_slice[1..33]).unwrap() * &f_r_fe;
     let g: GE = ECPoint::generator();
     let pub_key = *pubkey + g * &f_l_fe;
@@ -97,7 +97,7 @@ pub fn hd_key(
                 let f_l = &f >> 256;
                 let f_r = &f & &mask;
                 let f_l_fe: FE = ECScalar::from(&f_l);
-                let f_r_fe: FE = ECScalar::from(&f_r);
+                let _f_r_fe: FE = ECScalar::from(&f_r);
                 let cpk = acc.0 + g * &f_l_fe;
 
                 let xxx = BigInt::to_vec(&cpk.bytes_compressed_to_big_int());
@@ -371,7 +371,7 @@ impl SignTask {
 
 
     pub fn from_string(string: &String) -> Self {
-        let mut task: SignTask = serde_json::from_str(string).unwrap();
+        let task: SignTask = serde_json::from_str(string).unwrap();
         return task;
     }
     pub fn to_string(&self) -> String {
@@ -417,7 +417,7 @@ impl SignTask {
         self.round0.signers_vec = signers_vec.clone();
 
         let reply: String = serde_json::to_string(&party_num_int)?;
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
 
     }
 
@@ -530,7 +530,7 @@ impl SignTask {
         self.round1.sign_keys = Some(sign_keys.clone());
         self.round1.vss_scheme_vec = vss_scheme_vec.clone();
 
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
     }
 
     fn update_round2(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {
@@ -631,7 +631,7 @@ impl SignTask {
         self.round2.miu_vec = miu_vec;
         
 
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
     }
 
     fn update_round3(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {
@@ -663,7 +663,7 @@ impl SignTask {
         self.round3.sigma = sigma.clone();
         self.round3.delta_inv = delta_inv.clone();
 
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
     }
 
     fn update_round4(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {
@@ -685,13 +685,13 @@ impl SignTask {
         self.round4.decommit_vec = decommit_vec.clone();
         let reply = serde_json::to_string(&decommit).unwrap();
 
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
     }
 
     fn update_round5(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {
         
         let party_num_int = self.party_id.clone();
-        let threshold = self.threshold;
+        // let threshold = self.threshold;
 
         let mut decommit_vec = self.round4.decommit_vec.clone();
         let mut bc1_vec = self.round1.bc1_vec.clone();
@@ -707,12 +707,12 @@ impl SignTask {
         let b_proof_vec = (0..m_b_gamma_rec_vec.len())
             .map(|i| &m_b_gamma_rec_vec[i].b_proof)
             .collect::<Vec<&DLogProof>>();
-        let R = SignKeys::phase4(&delta_inv, &b_proof_vec, decommit_vec, &bc1_vec)
+        let sign_r = SignKeys::phase4(&delta_inv, &b_proof_vec, decommit_vec, &bc1_vec)
             .expect("bad gamma_i decommit");
 
 
         // adding local g_gamma_i
-        let R = R + decomm_i.g_gamma_i * &delta_inv;
+        let sign_r = sign_r + decomm_i.g_gamma_i * &delta_inv;
 
         // we assume the message is already hashed (by the signer).
         let message = &self.round0.msg[..];
@@ -720,7 +720,7 @@ impl SignTask {
         let two = BigInt::from(2);
         let message_bn = message_bn.modulus(&two.pow(256));
         let local_sig =
-            LocalSignature::phase5_local_sig(&sign_keys.k_i, &message_bn, &R, &sigma, &y_sum);
+            LocalSignature::phase5_local_sig(&sign_keys.k_i, &message_bn, &sign_r, &sigma, &y_sum);
 
         let (phase5_com, phase_5a_decom, helgamal_proof) = local_sig.phase5a_broadcast_5b_zkproof();
 
@@ -742,22 +742,22 @@ impl SignTask {
         self.round5.helgamal_proof = Some(helgamal_proof.clone());
         self.round5.phase_5a_decom = Some(phase_5a_decom.clone());
         self.round5.local_sig = Some(local_sig);
-        self.round5.r = R.clone();
+        self.round5.r = sign_r.clone();
         self.round5.commit5a_vec = commit5a_vec.clone();
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
         // Err(format_err!("invalid round({})", self.next_round))
     }
 
     fn update_round6(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {
         
 
-        let R = self.round5.r.clone();
+        let sign_r = self.round5.r.clone();
         let local_sig = self.round5.local_sig.clone().unwrap();
         let helgamal_proof = self.round5.helgamal_proof.clone().unwrap();
         let phase_5a_decom = self.round5.phase_5a_decom.clone().unwrap();
         let mut commit5a_vec = self.round5.commit5a_vec.clone();
         let party_num_int = self.party_id;
-        let THRESHOLD = 1;
+        let threshold = self.threshold;
 
         let mut msgs: Vec<String> = Vec::new();
         msgs.push(msg.clone());
@@ -775,10 +775,10 @@ impl SignTask {
         let decommit5a_and_elgamal_vec_includes_i = decommit5a_and_elgamal_vec.clone();
         decommit5a_and_elgamal_vec.remove((party_num_int - 1) as usize);
         commit5a_vec.remove((party_num_int - 1) as usize);
-        let phase_5a_decomm_vec = (0..THRESHOLD)
+        let phase_5a_decomm_vec = (0..threshold)
             .map(|i| decommit5a_and_elgamal_vec[i as usize].0.clone())
             .collect::<Vec<Phase5ADecom1>>();
-        let phase_5a_elgamal_vec = (0..THRESHOLD)
+        let phase_5a_elgamal_vec = (0..threshold)
             .map(|i| decommit5a_and_elgamal_vec[i as usize].1.clone())
             .collect::<Vec<HomoELGamalProof>>();
         let (phase5_com2, phase_5d_decom2) = local_sig
@@ -787,14 +787,14 @@ impl SignTask {
                 &commit5a_vec,
                 &phase_5a_elgamal_vec,
                 &phase_5a_decom.V_i,
-                &R.clone(),
+                &sign_r.clone(),
             ).expect("error phase5");
 
         self.round6.decommit5a_and_elgamal_vec_includes_i = decommit5a_and_elgamal_vec_includes_i.clone();
         self.round6.phase5_com2 = Some(phase5_com2.clone());
         self.round6.phase_5d_decom2 = Some(phase_5d_decom2.clone());
         
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
             // Err(format_err!("invalid round({})", self.next_round))
     }
 
@@ -820,14 +820,14 @@ impl SignTask {
 
         self.round7.commit5c_vec = commit5c_vec.clone();
 
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
     }
 
     fn update_round8(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {
         let party_num_int = self.party_id;
         let phase_5d_decom2 = self.round6.phase_5d_decom2.clone().unwrap();
         let decommit5a_and_elgamal_vec_includes_i = self.round6.decommit5a_and_elgamal_vec_includes_i.clone();
-        let THRESHOLD = 1;
+        let threshold = self.threshold;
         let local_sig = self.round5.local_sig.clone().unwrap();
         let commit5c_vec = self.round7.commit5c_vec.clone();
 
@@ -846,7 +846,7 @@ impl SignTask {
         );
     
 
-        let phase_5a_decomm_vec_includes_i = (0..THRESHOLD + 1)
+        let phase_5a_decomm_vec_includes_i = (0..threshold + 1)
         .map(|i| decommit5a_and_elgamal_vec_includes_i[i as usize].0.clone())
         .collect::<Vec<Phase5ADecom1>>();
         let s_i = local_sig.phase5d(
@@ -856,7 +856,7 @@ impl SignTask {
         )
         .expect("bad com 5d");
         self.round8.s_i = s_i.clone();
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
         // Err(format_err!("invalid round({})", self.next_round))
     }
 
@@ -896,6 +896,7 @@ impl SignTask {
             "s",
             (BigInt::from(&(sig.s.get_element())[..])).to_str_radix(16),
         )).unwrap();
+        println!("Signature: {:}", sign_json);
 
 
         let y_sum = self.round1.child_y_sum.clone();
@@ -907,7 +908,7 @@ impl SignTask {
         println!("verifying signature with child pub key");
 
 
-        Ok(Json((self.uuid.clone(), reply)))
+        Ok(Json((uuid.clone(), reply)))
     }
 
     pub fn update(&mut self, uuid: &String, msg: &String) -> Result<Json<(String, String)>> {

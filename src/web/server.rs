@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use std::sync::RwLock;
-use uuid::Uuid;
+// use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct AuthConfig {

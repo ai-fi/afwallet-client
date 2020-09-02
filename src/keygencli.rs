@@ -1,5 +1,6 @@
 
 
+#![feature(map_first_last)]
 //use afwalletclient::*;
 #![recursion_limit = "128"]
 #![feature(proc_macro_hygiene)]
@@ -38,7 +39,6 @@ extern crate hex;
 #[macro_use]
 extern crate serde_derive;
 pub mod ecdsa;
-pub mod wallet;
 pub mod util;
 pub mod web;
 pub mod sdk;
