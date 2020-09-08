@@ -162,7 +162,7 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
 
     println!("y_sum: {:?}", y_sum);
     println!("chaincode: {:?}", chaincode);
-    println!("y_sum_xcood: {:?}", y_sum.bytes_compressed_to_big_int().to_str_radix(16));
+    println!("y_sum_xcood: {:?}", y_sum.bytes_compressed_to_big_int());//.to_str_radix(16));
     
     let init_str = format!("init:{:}:{:}:{:}", path.clone(), hex::encode(msg), party_num_int);
     // round0: 
@@ -568,49 +568,54 @@ pub fn sign_psbt(nc: &NetworkClient, wallet: &String, psbt: &bitcoin::util::psbt
     for i in 0..inputs.len() {
         // let tx_input: &bitcoin::TxIn = tx.input.get(i).unwrap();
         let input: &mut bitcoin::util::psbt::Input = inputs.get_mut(i).unwrap();
-        let utxo = input.witness_utxo.as_ref().unwrap();
-        let (pubkey, (_fingerprint, path)) :(&PublicKey, &(Fingerprint, DerivationPath)) = input.hd_keypaths.first_key_value().unwrap();
+        if input.witness_utxo.is_some() {
+            let utxo = input.witness_utxo.as_ref().unwrap();
+            let (pubkey, (_fingerprint, path)) :(&PublicKey, &(Fingerprint, DerivationPath)) = input.hd_keypaths.first_key_value().unwrap();
 
-        /*
-        let comp = SighashComponents::new(tx);
-        let sig_hash = comp.sighash_all(
-            tx_input,
-            &bitcoin::Address::p2pkh(
-                pubkey,
-                bitcoin::network::constants::Network::Bitcoin
-            ).script_pubkey(),
-            (utxo.value as u32).into(),
-        );
-        */
-        let mut cache = bitcoin::util::bip143::SigHashCache::new(tx);
-        let script = &utxo.script_pubkey;
-        let sighash_type = input.sighash_type.unwrap();
-        let sig_hash = cache.signature_hash(i, script, utxo.value, sighash_type);
-        
-        
-        let msg = &sig_hash[..];
-        let n = msg.len();
-        let mut msg_vec: Vec<u8> = Vec::new();
-        for i in 0..n {
-            msg_vec.push(msg[i]);
+            /*
+            let comp = SighashComponents::new(tx);
+            let sig_hash = comp.sighash_all(
+                tx_input,
+                &bitcoin::Address::p2pkh(
+                    pubkey,
+                    bitcoin::network::constants::Network::Bitcoin
+                ).script_pubkey(),
+                (utxo.value as u32).into(),
+            );
+            */
+            let mut cache = bitcoin::util::bip143::SigHashCache::new(tx);
+            let script = &utxo.script_pubkey;
+            println!("{:}", script);
+            let sighash_type = match input.sighash_type {
+                None => bitcoin::SigHashType::All,
+                Some(s) => s,
+            };
+            let sig_hash = cache.signature_hash(i, script, utxo.value, sighash_type);
+            
+            
+            let msg = &sig_hash[..];
+            let msg_vec = msg.to_vec();
+
+            let spath = format!("{:}", path);
+
+            let signature = sign(nc, wallet, &spath, &msg_vec, pcb, c_user_data)?;
+
+            //let mut sig_vec = signature.serialize_der().to_vec();
+            let mut v = BigInt::to_vec(&signature.r.to_big_int());
+            v.extend(BigInt::to_vec(&signature.s.to_big_int()));
+
+            let sig = bitcoin::secp256k1::Signature::from_compact(&v[..])?;
+            let sig_vec = sig.serialize_der().to_vec();
+            let pk_vec = pubkey.to_bytes();
+            input.final_script_witness = Some(vec![sig_vec, pk_vec]);
+            // let mut sig_vec = signature.serialize_der().to_vec();
+
+            // let pk_vec = pk.serialize().to_vec();
+            // input.final_script_witness = vec![sig_vec, pk_vec];
+
+        } else if input.non_witness_utxo.is_some() {
+            let _pretx = input.non_witness_utxo.as_ref().unwrap();
         }
-
-        let spath = format!("{:}", path);
-
-        let signature = sign(nc, wallet, &spath, &msg_vec, pcb, c_user_data)?;
-
-        //let mut sig_vec = signature.serialize_der().to_vec();
-        let mut v = BigInt::to_vec(&signature.r.to_big_int());
-        v.extend(BigInt::to_vec(&signature.s.to_big_int()));
-
-        let sig = bitcoin::secp256k1::Signature::from_compact(&v[..])?;
-        let sig_vec = sig.serialize_der().to_vec();
-        let pk_vec = pubkey.to_bytes();
-        input.final_script_witness = Some(vec![sig_vec, pk_vec]);
-        // let mut sig_vec = signature.serialize_der().to_vec();
-
-        // let pk_vec = pk.serialize().to_vec();
-        // input.final_script_witness = vec![sig_vec, pk_vec];
     }
     return Ok(signed_psbt);
 }

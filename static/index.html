@@ -391,6 +391,25 @@ function getDefaultWallet(cb) {
         cb(data, error || {code: -1, msg: "unknown"})
     });
 }
+
+function doCheckStatus() {
+    getVaultStatus(function(status, error) {
+        if (error.code != 0 || status == null) {
+            $('#page-loader').style.display = 'none';
+            return;
+        }
+        if (status.is_ready) {
+            routeToSigning();
+        } else {
+            checkStatus(10);
+        }
+    });
+}
+
+function checkStatus(sec) {
+    setTimeout(doCheckStatus, 1000 * sec);
+}
+
 function routeToPairing() {
     getPairingInfo(function(pairingInfo, error) {
         $('#page-loader').style.display = 'none';
@@ -406,7 +425,9 @@ function routeToPairing() {
         qrcode.clear();
         qrcode.makeCode(connstr);
         $('.pairing').style.display = 'inline';
-    })
+    });
+
+    checkStatus(10);
 }
 
 function routeToSigning() {
