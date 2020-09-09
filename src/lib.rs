@@ -207,15 +207,93 @@ pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_
 }
 
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+struct PSBTValue {
+    value: u64,
+    address: String
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+struct PSBTSummary {
+    inputs: Vec<PSBTValue>,
+    outputs: Vec<PSBTValue>,
+    fee: u64,
+    memo: String,
+}
+
 #[no_mangle]
-pub extern "C" fn c_sign_psbt(c_psbt: *const c_char) -> *mut c_char {
-    let raw_psbt = unsafe { CStr::from_ptr(c_psbt) };
-    let psbt = match raw_psbt.to_str() {
+pub extern "C" fn psbt_to_json(c_network: *const c_char, c_psbt: *const c_char) -> *mut c_char {
+    
+    let mutnull: *mut c_char = std::ptr::null_mut();
+    let raw_network = unsafe { CStr::from_ptr(c_network) };
+    let network_str = match raw_network.to_str() {
         Ok(s) => s,
-        Err(e) => return error_to_c_string(format_err!("decoding raw endpoint failed: {}", e)),
+        Err(_e) => return mutnull,
     };
-    let signature_json = sign_psbt(psbt);
-    CString::new(signature_json.to_owned()).unwrap().into_raw()
+    let network = match network_str.parse::<bitcoin::network::constants::Network>() {
+        Ok(s) => s,
+        Err(_e) => return mutnull,
+    };
+
+    let raw_psbt = unsafe { CStr::from_ptr(c_psbt) };
+    let psbt_hex = match raw_psbt.to_str() {
+        Ok(s) => s,
+        Err(_e) => return mutnull,
+    };
+
+    let psbt = bitcoin::util::psbt::PartiallySignedTransaction::from_hex_string(&psbt_hex);
+
+    let tx = &psbt.global.unsigned_tx;
+    let inputs = &psbt.inputs;
+    let outputs = &psbt.outputs;
+
+
+    let mut fee: u64 = 0;
+    let mut iv: Vec<PSBTValue> = Vec::new();
+    let mut ov: Vec<PSBTValue> = Vec::new();
+    for i in 0..inputs.len() {
+        // let tx_input: &bitcoin::TxIn = &tx.input.get(i).unwrap();
+        let input: &bitcoin::util::psbt::Input = &inputs.get(i).unwrap();
+        let (pubkey, (_fingerprint, _path)) = input.hd_keypaths.first_key_value().unwrap();
+        let address = bitcoin::Address::p2wpkh(&pubkey, network);
+        let value = input.witness_utxo.as_ref().unwrap().value;
+        let v = PSBTValue{
+            value: value,
+            address: address.to_string(),
+        };
+        fee = fee + value;
+        iv.push(v);
+    }
+    for i in 0..outputs.len() {
+        let tx_output: &bitcoin::TxOut = &tx.output.get(i).unwrap();
+        let output: &bitcoin::util::psbt::Output = &outputs.get(i).unwrap();
+        // tx_output.script_pubkey.is_v0_p2wpkh()
+        
+        let address: String = match output.hd_keypaths.first_key_value() {
+            None => bitcoin::Address::from_script(&tx_output.script_pubkey, network).unwrap().to_string(),
+            Some((pubkey, (_fingerprint, _path))) => bitcoin::Address::p2wpkh(&pubkey, network).to_string(),
+        };
+        
+        let value = tx_output.value;
+        fee = fee - value;
+        let v = PSBTValue{
+            value: value,
+            address: address,
+        };
+        ov.push(v);
+    }
+
+    let summary = PSBTSummary {
+        inputs: iv,
+        outputs: ov,
+        fee: fee,
+        memo: String::new(),
+    };
+
+    let summary_json_str = serde_json::to_string(&summary).unwrap();
+    println!("PSBT: {:}", summary_json_str);
+
+    CString::new(summary_json_str.to_owned()).unwrap().into_raw()
 }
 
 pub fn sign_psbt(hex: &str) -> String {

@@ -399,6 +399,7 @@ function doCheckStatus() {
             return;
         }
         if (status.is_ready) {
+            $('.pairing').style.display = 'none';
             routeToSigning();
         } else {
             checkStatus(10);
