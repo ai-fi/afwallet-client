@@ -41,6 +41,7 @@ hex = "0.3.2"
 config = "0.9"
 floating-duration = "0.1.2"
 rust-crypto = "^0.2"
+webbrowser = "0.5.5"
 #rust-crypto = { git = "https://github.com/vhnatyk/rust-crypto", branch="aarch64"}
 
 

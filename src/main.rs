@@ -165,6 +165,18 @@ fn display_qrcode() {
     }
 }
 fn main() {  
+    let matches = clap::App::new("Ai-Fi Vault for Desktop")
+        .version("0.0.1")
+        .author("Ai-Fi.net, Incopration")
+        .about("Ai-Fi Vault for Desktop")
+        .arg(clap::Arg::with_name("open-browser")
+            .short("b")
+            .long("open-browser")
+            .takes_value(false)
+            .help("Open browser"))
+        .get_matches();
+
+
     let run_psbt_test = false;
     if run_psbt_test {
         test_psbt();
@@ -172,5 +184,15 @@ fn main() {
 
     display_qrcode();
 
+    if matches.is_present("open-browser") {
+        
+        std::thread::spawn(move || {
+            // std::thread::sleep_ms(1000);
+            let result = webbrowser::open("http://127.0.0.1:8000");
+            if result.is_err() {
+                println!("Failed to launch browser, {:?}", result.err());
+            }
+        });
+    }
     web::server::get_server().launch();
 }
