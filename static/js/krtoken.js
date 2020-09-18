@@ -172,15 +172,15 @@ function initialUI(cb) {
 
   if (action == 'backup') {
     gotoBackup();
-    cb();
-  } else { 
-    gotoRestore();
     restClient.listVaults(function(result) {
       if (result.code == 0) {
         g_vaults = result.data;
       }
       cb();
     });
+  } else { 
+    gotoRestore();
+    cb();
   }
 }
 
