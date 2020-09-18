@@ -141,7 +141,7 @@ pub extern "C" fn ecdsa_keygen(c_connstr: *const c_char, pcb: sdk::keygen::KeyGe
 }
 
 #[no_mangle]
-pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_str: *const c_char, pcb: sdk::sign::SignProgress, c_user_data: *mut c_void, c_error: *mut c_int)  -> *mut c_char {
+pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_network: *const c_char, c_psbt_str: *const c_char, pcb: sdk::sign::SignProgress, c_user_data: *mut c_void, c_error: *mut c_int)  -> *mut c_char {
     let raw_connstr = unsafe { CStr::from_ptr(c_connstr) };
     let opt_connstr = raw_connstr.to_str();
     if opt_connstr.is_err() {
@@ -166,6 +166,20 @@ pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_
     }
     let wallet_str = opt_wallet_str.unwrap();
 
+    
+    let raw_network_str = unsafe { CStr::from_ptr(c_network) };
+    let opt_network_str = raw_network_str.to_str();
+    if opt_network_str.is_err() {
+        unsafe {
+            *c_error = -1
+        };
+        let null: *const c_char = std::ptr::null();
+        let mutnull: *mut c_char = null.clone() as *mut c_char;
+        return mutnull;
+    }
+    let network_str = opt_network_str.unwrap();
+    let network: bitcoin::network::constants::Network = network_str.parse::<bitcoin::network::constants::Network>().unwrap();
+
     let raw_psbt_str = unsafe { CStr::from_ptr(c_psbt_str) };
     let opt_psbt_str = raw_psbt_str.to_str();
     if opt_psbt_str.is_err() {
@@ -181,7 +195,7 @@ pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_
     let nc = sdk::network::NetworkClient::new(connstr);
 
     let psbt = bitcoin::util::psbt::PartiallySignedTransaction::from_hex_string(&psbt_str);
-    let result = sdk::sign::sign_psbt(&nc, &String::from(wallet_str), &psbt, pcb, c_user_data);
+    let result = sdk::sign::sign_psbt(&nc, &String::from(wallet_str), network, &psbt, pcb, c_user_data);
     if result.is_err() {
         unsafe {
             *c_error = -2
@@ -192,6 +206,11 @@ pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_
     }
 
     let signed_psbt = result.unwrap();
+    let tx = signed_psbt.clone().extract_tx();
+    let tx_vec = bitcoin::consensus::serialize(&tx);
+    let tx_hex = hex::encode(&tx_vec);
+
+    println!("PSBT: {:?}", &signed_psbt);
     let signed_psbt_hex_str = match signed_psbt.to_hex_string() {
         None => {
             unsafe {
@@ -203,7 +222,8 @@ pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_
         },
         Some(s) => s,
     };
-    CString::new(signed_psbt_hex_str).unwrap().into_raw()
+    println!("PSBT HEX: {:?}", signed_psbt_hex_str);
+    CString::new(tx_hex).unwrap().into_raw()
 }
 
 
@@ -254,15 +274,17 @@ pub extern "C" fn psbt_to_json(c_network: *const c_char, c_psbt: *const c_char) 
     for i in 0..inputs.len() {
         // let tx_input: &bitcoin::TxIn = &tx.input.get(i).unwrap();
         let input: &bitcoin::util::psbt::Input = &inputs.get(i).unwrap();
-        let (pubkey, (_fingerprint, _path)) = input.hd_keypaths.first_key_value().unwrap();
-        let address = bitcoin::Address::p2wpkh(&pubkey, network);
-        let value = input.witness_utxo.as_ref().unwrap().value;
-        let v = PSBTValue{
-            value: value,
-            address: address.to_string(),
-        };
-        fee = fee + value;
-        iv.push(v);
+        if input.hd_keypaths.len() > 0 {
+            let (pubkey, (_fingerprint, _path)) = input.hd_keypaths.first_key_value().unwrap();
+            let address = bitcoin::Address::p2wpkh(&pubkey, network);
+            let value = input.witness_utxo.as_ref().unwrap().value;
+            let v = PSBTValue{
+                value: value,
+                address: address.to_string(),
+            };
+            fee = fee + value;
+            iv.push(v);
+        }
     }
     for i in 0..outputs.len() {
         let tx_output: &bitcoin::TxOut = &tx.output.get(i).unwrap();
@@ -295,18 +317,6 @@ pub extern "C" fn psbt_to_json(c_network: *const c_char, c_psbt: *const c_char) 
 
     CString::new(summary_json_str.to_owned()).unwrap().into_raw()
 }
-
-pub fn sign_psbt(hex: &str) -> String {
-    let psbt = bitcoin::util::psbt::PartiallySignedTransaction::from_hex_string(hex);
-    let tx = psbt.extract_tx();
-    let signed_psbt = bitcoin::util::psbt::PartiallySignedTransaction::from_unsigned_tx(tx).unwrap();
-    //let mut s = String::new();
-    //let mut buf = Vec::new();
-    //let r: Result<usize, _> = psbt.consensus_encode(buf);
-    let str1 = signed_psbt.to_hex_string().unwrap();
-    return  str1;
-}
-
 
 #[cfg(test)]
 mod tests {

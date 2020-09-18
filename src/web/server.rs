@@ -96,9 +96,14 @@ pub fn get_server() -> Rocket {
                 vault::pairing_info,
                 vault::vault_status,
                 vault::vault_data,
+                vault::list_vaults,
+                vault::restore,
                 keygen::keygen,
                 sign::sign,
                 wallet::get_default,
+                token::srp,
+                token::save,
+                token::retrieve,
             ]
         )
         //.manage(db_config)

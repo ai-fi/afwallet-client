@@ -132,6 +132,7 @@ body {
     line-height: 44px; */
     display: none;
 }
+
 .flipCard {
     -webkit-perspective: 800;
     -ms-perspective: 800;
@@ -234,6 +235,35 @@ body {
     font-size: 14px;
 }
 
+.menu-container {
+    position: absolute; 
+    right:10px; 
+    top:40px; 
+    padding:0;
+    z-index: 100002; 
+    min-width:150px; 
+    background-color:#eee; 
+    font-size: 12px;
+    display: none;
+}
+.menu-list {
+    margin: 0; 
+    padding: 0; 
+    list-style-type: none;
+
+}
+.menu-list li {
+    padding: 10px;
+}
+.menu-list li:hover {
+    background-color: #ccc;
+    cursor: pointer;
+}
+.menu-list li a {
+    text-decoration: none;
+    color: #000;
+
+}
 input {
     background: none;
     border: none;
@@ -307,6 +337,7 @@ input[type=button] {
 	position:relative;
 	top:-857px;
 }
+
 </style>
 <script type="text/javascript">
 let ec_not_json = -20001;
@@ -477,14 +508,60 @@ window.onload = function() {
     }, 500);
     */
 }
+
+function showParingQRCode() {
+    $('.menu-container').style.display = 'none';
+    $('.pairing').style.display = 'inline';
+    $('.signing').style.display = 'none';
+}
+
+
+function showCards() {
+    $('.menu-container').style.display = 'none';
+    $('.signing').style.display = 'inline';
+    $('.pairing').style.display = 'none';
+}
+
+
+function showBackup() {
+    $('.menu-container').style.display = 'none';
+    $('.pairing').style.display = 'none';
+    $('.signing').style.display = 'none';
+
+    window.open("krtoken.html?action=backup", 'blank')
+}
+
+function toggleMore() {
+    let menu = $('.menu-container');
+    if (menu.style.display === 'none' || menu.style.display.length == 0) {
+        menu.style.display = 'inline';
+    } else {
+        menu.style.display = 'none'
+    }
+
+}
 </script>
 </head>
 <body>
 <div class="container">
+
+    <div class="menu-container">
+        <ul class="menu-list">
+            <li onclick="showCards(); return false;">
+                <a href="#">Show Cards</a>
+            </li>
+            <li onclick="showParingQRCode(); return false;">
+                <a href="#">Show Paring QR Code</a>
+            </li>
+            <li>
+                <a href="token.html?action=backup" target="_blank">Backup</a>
+            </li>
+        </ul>
+    </div>
     <nav class="header">
         Ai-Fi Vault
         <div class="btn-setting-container">
-            <a>
+            <a href="#" onclick="toggleMore(); return false;">
                 <img src="img/more.png" />
             </a>
         </div>
@@ -508,7 +585,7 @@ window.onload = function() {
                     <p>你的Ai-Fi Vault还没有初始化.
                     请在你手机上用Ai-Fi Vault扫描这个二维码进行配对.</p>
                     <p>
-                        如果你已经初始化过Ai-Fi Vault，你可以尝试<a href="#">恢复已有的Ai-Fi Vault</a>.
+                        如果你已经初始化过Ai-Fi Vault，你可以尝试<a href="token.html?action=restore">恢复已有的Ai-Fi Vault</a>.
                     </p>
                     <p>
                         如果你还有疑问，请<a href="#">点击此处了解更多</a>.

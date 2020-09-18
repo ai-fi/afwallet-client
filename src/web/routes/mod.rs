@@ -12,6 +12,7 @@ pub mod vault;
 pub mod keygen;
 pub mod sign;
 pub mod wallet;
+pub mod token;
 
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]

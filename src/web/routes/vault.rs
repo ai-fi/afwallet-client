@@ -60,8 +60,8 @@ pub fn vault_status(
     Ok(Json(status))
 }
 
-#[get("/vault/list")]
-pub fn list_vaults(
+#[get("/vault/ids")]
+pub fn list_vault_ids(
     state: State<Config>,
     claim: Claims
 ) -> Result<Json<Vec<String>>> {
@@ -73,6 +73,38 @@ pub fn list_vaults(
     Ok(Json(result))
 }
 
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct VaultObject {
+    pub subject: String,
+    pub value: String,
+    pub encoding: String,
+}
+
+#[get("/vault/list")]
+pub fn list_vaults(
+    state: State<Config>,
+    claim: Claims
+) -> Result<Json<Vec<VaultObject>>> {
+
+    let vault_wallet_ids_id = String::from("vault_wallet_ids_id");
+    let result: Vec<String> = db::get(&state.db, &claim.sub, &vault_wallet_ids_id, &VaultStruct::VaultWalletIDs)?
+    .ok_or(format_err!("No data for such identifier {}", vault_wallet_ids_id))?;
+    
+    let mut vaults: Vec<VaultObject> = Vec::new();
+    for id in result {
+        let data: String =db::get(&state.db, &claim.sub, &id, &VaultStruct::VaultData)?
+        .ok_or(format_err!("No data for such identifier {}", id))?;
+
+        vaults.push(VaultObject{
+            subject: id, 
+            value: data,
+            encoding: String::from("plain"),
+        });
+    }
+
+    Ok(Json(vaults))
+}
+
 #[get("/vault/data/<uuid>")]
 pub fn vault_data(
     state: State<Config>,
@@ -82,4 +114,39 @@ pub fn vault_data(
     let data: String =db::get(&state.db, &claim.sub, &uuid, &VaultStruct::VaultData)?
     .ok_or(format_err!("No data for such identifier {}", uuid))?;
     Ok(Json(data))
+}
+
+
+
+#[post("/vault/restore", format = "json", data = "<request>")]
+pub fn restore(
+    claim: Claims,
+    state: State<Config>,
+    request: Json<Vec<VaultObject>>,
+) -> Result<Json<i32>> {
+
+    let vault_wallet_ids_id = String::from("vault_wallet_ids_id");
+
+    let mut wallet_ids: Vec<String> = Vec::new();
+    for vault in request.0 {
+        wallet_ids.push(vault.subject.clone());
+        db::insert(
+            &state.db,
+            &claim.sub,
+            &vault.subject.clone(),
+            &VaultStruct::VaultData,
+            &vault.value,
+        )?;
+    }
+    
+    db::insert(
+        &state.db,
+        &claim.sub,
+        &vault_wallet_ids_id,
+        &VaultStruct::VaultWalletIDs,
+        &wallet_ids,
+    )?;
+
+
+    return Ok(Json(0));
 }
