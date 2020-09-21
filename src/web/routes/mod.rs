@@ -25,6 +25,7 @@ pub struct RequestMessage {
 pub enum VaultStruct {
     VaultWalletIDs,
     VaultData,
+    VaultWalletNetwork,
 }
 
 use super::storage::*;

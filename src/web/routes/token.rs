@@ -40,10 +40,25 @@ pub struct Response<T> {
 type SRPStep1ResponseData = String;
 type SRPStep1Response = Response<SRPStep1ResponseData>;
 
-type SaveResponseData = i32;
+type SaveResponseData = bool;
 type SaveResponse = Response<SaveResponseData>;
 
-type RetrieveResponseData = SaveRequest;
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct RetrieveResponseShareData {
+    pub fileName: String,
+    pub share: String,
+    pub verification: String,
+    pub salt: String,
+    pub version: String,
+    pub ephemeralPublicKey: String,
+    pub otherOptions: Option<std::collections::HashMap<String, String>>,
+}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct RetrieveResponseData {
+    pub m2: String,
+    pub share: RetrieveResponseShareData,
+}
 type RetrieveResponse = Response<RetrieveResponseData>;
 
 
@@ -136,6 +151,7 @@ pub fn retrieve(
     let client = AFCloudClient::new("https://registry.ai-fi.net");
     let path = format!("vpn/sss/share/retrieve/{}", filename);
     let respstr = client.post(&path, request.0)?;
+    println!("{}", respstr);
     let resp: RetrieveResponse = serde_json::from_str(&respstr)?;
     return Ok(Json(resp));
 }

@@ -29,9 +29,10 @@ use paillier::EncryptionKey;
 
 
 
-#[get("/wallet/default")]
+#[get("/wallet/default/<network>")]
 pub fn get_default(
     state: State<Config>,
+    network: String,
     // db_mtx: State<RwLock<HashMap<String, String>>>,
     claim: Claims,
 ) -> Result<Json<(String, String, String, String)>> {
@@ -60,8 +61,13 @@ pub fn get_default(
     // let data = hex::decode(&xpubstr).unwrap();
     // let b58 = bitcoin::util::base58::encode_slice(&data);
     // let xpub = super::super::super::util::address::zpub_from(&y_sum, &chaincode);
+
+    let btcnw = network.parse::<bitcoin::network::constants::Network>()?;
     let xpub = String::new();
-    let addr = super::super::super::util::address::pubkey_to_address(&y_sum, &bitcoin::network::constants::Network::Testnet);
-    let path = String::from("m/84'/0'/0'");
+    let addr = super::super::super::util::address::pubkey_to_address(&y_sum, &btcnw);
+    let mut path = String::from("m/84'/0'/0'");
+    if btcnw == bitcoin::network::constants::Network::Testnet {
+        path = String::from("m/84'/1'/0'");
+    }
     Ok(Json((uuid, addr, path, xpub)))
 }

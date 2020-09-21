@@ -97,6 +97,7 @@ pub fn get_server() -> Rocket {
                 vault::vault_status,
                 vault::vault_data,
                 vault::list_vaults,
+                vault::switch_network,
                 vault::restore,
                 keygen::keygen,
                 sign::sign,

@@ -3,6 +3,9 @@
 platform=$1
 
 build_ios() {
+
+    rm -rf /usr/local/lib/libgmp.a
+    ln -s /usr/local/lib/libgmp.ios.a /usr/local/lib/libgmp.a
     echo "Build for iOS..."
     rm -rf ./Cargo.toml #./Cargo.lock
     cp ios/Cargo.toml .
@@ -18,6 +21,10 @@ build_android() {
 }
 
 build_desktop() {
+
+    rm -rf /usr/local/lib/libgmp.a
+    ln -s /usr/local/lib/libgmp.osx.a /usr/local/lib/libgmp.a
+
     echo "Build for Desktop..."
     rm -rf ./Cargo.toml #./Cargo.lock
     cp desktop/Cargo.toml .

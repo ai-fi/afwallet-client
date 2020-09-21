@@ -341,6 +341,7 @@ input[type=button] {
 </style>
 <script type="text/javascript">
 let ec_not_json = -20001;
+var g_btcNetwork = 'bitcoin';
 
 $ = function(attr) {
     var elts = null;
@@ -407,6 +408,23 @@ function ping(cb) {
     });
 
 }
+
+
+function switchNetwork(network, cb) {
+    ajax('/api/vault/switch_network/' + network, 'get', null, function(data, error) {
+        if (error == null) {
+            cb(null);
+            return;
+        }
+        if (error != null && error.code == ec_not_json) {
+            cb(null);
+            return;
+        }
+
+        cb(error || {code: -1, msg: "unknown"})
+    });
+
+}
 function getVaultStatus(cb) {
     ajax('/api/vault/status', 'get', null, function(data, error) {
         cb(data, error || {code: -1, msg: "unknown"})
@@ -418,7 +436,7 @@ function getPairingInfo(cb) {
     });
 }
 function getDefaultWallet(cb) {
-    ajax('/api/wallet/default', 'get', null, function(data, error) {
+    ajax('/api/wallet/default/' + g_btcNetwork, 'get', null, function(data, error) {
         cb(data, error || {code: -1, msg: "unknown"})
     });
 }
@@ -488,6 +506,9 @@ window.onload = function() {
                 $('#page-loader').style.display = 'none';
                 return;
             }
+
+            g_btcNetwork = status.network;
+            $('#lb-network-id').innerHTML = (g_btcNetwork == 'bitcoin') ? 'testnet' : 'bitcoin';
             if (status.is_ready) {
                 routeToSigning();
             } else {
@@ -540,6 +561,18 @@ function toggleMore() {
     }
 
 }
+
+function doSwitchNetwork() {
+    let network = (g_btcNetwork === 'bitcoin') ? 'testnet' : 'bitcoin';
+    switchNetwork(network, function(result) {
+        if (result.code != 0) {
+            return;
+        }
+
+        window.location.reload();
+        //$('#lb-network-id').innerHTML = g_btcNetwork;
+    })
+}
 </script>
 </head>
 <body>
@@ -547,6 +580,9 @@ function toggleMore() {
 
     <div class="menu-container">
         <ul class="menu-list">
+            <li onclick="doSwitchNetwork(); return false;">
+                <a href="#">Switch to <b id="lb-network-id">Testnet</b></a>
+            </li>
             <li onclick="showCards(); return false;">
                 <a href="#">Show Cards</a>
             </li>
