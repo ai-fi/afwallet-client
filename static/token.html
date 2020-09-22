@@ -21,7 +21,15 @@
     }
   </style>
   <script type="text/javascript">
-
+    function togglePasswordVisiable() {
+      if($('#passphrase-tf').attr('type') === 'text') {
+        $('#passphrase-tf').attr('type', 'password');
+        $('#btn-show-password').html('Show Password');
+      } else {
+        $('#passphrase-tf').attr('type', 'text');
+        $('#btn-show-password').html('Hide Password');
+      }
+    }
     function gotoGuideScreen() {
 
       $('#token-guide-card').css({display: 'block'});
@@ -35,7 +43,6 @@
       $('#token-guide-card').css({display: 'none'});
       $('#token-credential-card').css({display: 'block'});
       $('#token-credential-card-title').text('Backup as Token');
-
       $('#token-credential-card-buttons').html('&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-primary"\n' +
         '                    onclick="backupClicked()" id="open-button">Backup</button>&nbsp;&nbsp;&nbsp;&nbsp;\n' +
         '            <div id="open-indicator" class="spinner-border" role="status" style="color: #00aaff; display: none;">\n' +
@@ -51,7 +58,9 @@
       $('#token-guide-card').css({display: 'none'});
       $('#token-credential-card').css({display: 'block'});
       $('#token-credential-card-title').text('Restore from Token');
-
+      $('#btn-generate-random-entropy-salt').css({display: 'none'});
+      //$('btn-show-password').css({display: 'none'});
+      
       $('#token-credential-card-buttons').html('&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-primary"\n' +
         '                    onclick="restoreClicked()" id="open-button">Restore</button>&nbsp;&nbsp;&nbsp;&nbsp;\n' +
         '            <div id="open-indicator" class="spinner-border" role="status" style="color: #00aaff; display: none;">\n' +
@@ -147,15 +156,18 @@
         <div class="card-body" style="display: none;" id="token-credential-card">
           <h4 class="card-title" id="token-credential-card-title">Create New Token</h4>
 
-          <p class="card-text">
+          <div class="card-text">
 
             <label for="entropy-salt-tf" class="sr-only">Entropy Salt</label>
             <input type="text" id="entropy-salt-tf" class="form-control" placeholder="Entropy Salt" required autofocus />
+            <!--<a id="btn-generate-random-entropy-salt" href="#" style="float: right;">Generate Random Entropy Salt<br/></a>-->
             <br />
             <label for="passphrase-tf" class="sr-only">Passphrase</label>
-            <input type="password" id="passphrase-tf" class="form-control" placeholder="Passphrase" required />
-          </p>
-          <p style="text-align: center; line-height: 44px;" id="token-credential-card-buttons">
+            <input type="text" id="passphrase-tf" class="form-control" placeholder="Passphrase" required />
+            <div style="text-align: right;"><a id="btn-show-password" href="#" onclick="togglePasswordVisiable()">Hide Password</a></div>
+            <div style="text-align: right;" id="strength_human"></div>
+          </div>
+          <div style="text-align: center; line-height: 44px;" id="token-credential-card-buttons">
             <!--<button class="btn btn-primary"
                     onclick="openClicked()" id="open-button" disabled="disabled">Open</button>&nbsp;&nbsp;&nbsp;&nbsp;
             <div id="open-indicator" class="spinner-border" role="status" style="color: #00aaff; display: none;">
@@ -163,7 +175,7 @@
             </div>
             <br />
             <a href="#" onclick="gotoCreateNewToken(); return false;" id="create-button" disabled="disabled">Create New Token</a>-->
-          </p>
+          </div>
 
         </div>
       </div>
@@ -186,6 +198,7 @@
   <!-- You must include a crypto configuration and it must match what the server is configured to use -->
   <script src="libs/srp/thinbus-srp6a-2048-sha256-min.js"></script>
 
+  <script src="js/zxcvbn.js?v=1.2.10"></script>
   <script src="js/simple-password-meter.js"></script>
 
 

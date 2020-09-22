@@ -120,7 +120,10 @@ function doRestoreFromToken() {
         return;
       }
 
-      showInfoNotify("Restore succeed.");
+      showInfoNotify("Restore succeed. Auto back to workspace 5 seconds later");
+      setTimeout(function() {
+        window.location.href='index.html'
+      }, 5000);
     });
   });
 }
