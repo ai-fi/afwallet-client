@@ -534,6 +534,23 @@ function showParingQRCode() {
     $('.menu-container').style.display = 'none';
     $('.pairing').style.display = 'inline';
     $('.signing').style.display = 'none';
+
+    $('#page-loader').style.display = 'inline';
+    getPairingInfo(function(pairingInfo, error) {
+        $('#page-loader').style.display = 'none';
+        if (error.code != 0 || pairingInfo == null) {
+            return
+        }
+
+        let connstr = JSON.stringify(pairingInfo);
+        var qrcode = new QRCode($(".qrcode"), {
+            width : 200,
+            height : 200
+        });
+        qrcode.clear();
+        qrcode.makeCode(connstr);
+        $('.pairing').style.display = 'inline';
+    });
 }
 
 
