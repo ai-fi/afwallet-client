@@ -10,6 +10,6 @@ cp run.sh ../release/
 
 
 
-
+tar -czvf ../afwallet-client.$(date "+%Y%m%d%H%M%S").tar.gz ../release
 
 
