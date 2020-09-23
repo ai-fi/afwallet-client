@@ -318,6 +318,46 @@ pub extern "C" fn psbt_to_json(c_network: *const c_char, c_psbt: *const c_char) 
     CString::new(summary_json_str.to_owned()).unwrap().into_raw()
 }
 
+
+
+extern "C" fn callback(i: c_int, _c_user_data: *mut c_void) {
+    println!("Round{}", i);
+}
+
+#[no_mangle]
+pub extern "C" fn ecdsa_verify_key(c_connstr: *const c_char, c_wallet_str: *const c_char) -> c_int {
+    let raw_connstr = unsafe { CStr::from_ptr(c_connstr) };
+    let opt_connstr = raw_connstr.to_str();
+    if opt_connstr.is_err() {
+        return -1;
+    }
+    let connstr = opt_connstr.unwrap();
+
+    let raw_wallet_str = unsafe { CStr::from_ptr(c_wallet_str) };
+    let opt_wallet_str = raw_wallet_str.to_str();
+    if opt_wallet_str.is_err() {
+        return -1;
+    }
+    let wallet_str = opt_wallet_str.unwrap();
+
+    
+    let nc = sdk::network::NetworkClient::new(connstr);
+
+    let path = String::from("m/0'/0'");
+    let msg: Vec<u8> = vec![
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 
+        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f    
+    ];
+    let null: *mut c_void = std::ptr::null_mut();
+    let result = match sdk::sign::sign(&nc, &String::from(wallet_str), &path, &msg, callback, null) {
+        Err(_e) => -2,
+        Ok(_s) => 0,
+    };
+    return result;
+}
+
 #[cfg(test)]
 mod tests {
     

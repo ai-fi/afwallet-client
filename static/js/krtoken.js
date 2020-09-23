@@ -120,7 +120,7 @@ function doRestoreFromToken() {
         return;
       }
 
-      showInfoNotify("Restore succeed. Auto back to workspace 5 seconds later");
+      showInfoNotify("Restore succeed. Auto back to workspace 5 seconds later.");
       setTimeout(function() {
         window.location.href='index.html'
       }, 5000);
@@ -150,7 +150,10 @@ function doBackupAsToken() {
       showError(result);
       return;
     }
-    showInfoNotify("Backup succeed.");
+    showInfoNotify("Backup succeed. Auto back to workspace 5 seconds later.");
+    setTimeout(function() {
+      window.location.href='index.html'
+    }, 5000);
   });
 }
 

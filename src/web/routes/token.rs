@@ -151,7 +151,20 @@ pub fn retrieve(
     let client = AFCloudClient::new("https://registry.ai-fi.net");
     let path = format!("vpn/sss/share/retrieve/{}", filename);
     let respstr = client.post(&path, request.0)?;
-    println!("{}", respstr);
+    //println!("{}", respstr);
     let resp: RetrieveResponse = serde_json::from_str(&respstr)?;
+    return Ok(Json(resp));
+}
+
+#[post("/token/sss/share/update", format = "json", data = "<request>")]
+pub fn update(
+    _claim: Claims,
+    request: Json<SaveRequest>,
+) -> Result<Json<SaveResponse>> {
+    let client = AFCloudClient::new("https://registry.ai-fi.net");
+    let path = format!("vpn/sss/share/update");
+    let respstr = client.post(&path, request.0)?;
+    //println!("{}", respstr);
+    let resp: SaveResponse = serde_json::from_str(&respstr)?;
     return Ok(Json(resp));
 }

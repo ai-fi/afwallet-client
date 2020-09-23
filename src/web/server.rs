@@ -105,6 +105,7 @@ pub fn get_server() -> Rocket {
                 token::srp,
                 token::save,
                 token::retrieve,
+                token::update,
             ]
         )
         //.manage(db_config)
