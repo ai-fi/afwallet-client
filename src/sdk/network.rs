@@ -94,7 +94,7 @@ impl NetworkClient {
             Err(e) => return Err(e),
         };
         //println!("{}",text);
-        let (uuid, msg): (String, String) = serde_json::from_str(&text).unwrap();
+        let (uuid, msg): (String, String) = serde_json::from_str(&text)?;
         Ok((uuid, msg))
     }
 
@@ -104,7 +104,7 @@ impl NetworkClient {
             Ok(r) => r,
             Err(e) => return Err(e),
         };
-        let (uuid, msg): (String, String) = serde_json::from_str(&text).unwrap();
+        let (uuid, msg): (String, String) = serde_json::from_str(&text)?;
         Ok((uuid, msg))
     }
 
