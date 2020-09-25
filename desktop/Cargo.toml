@@ -12,15 +12,15 @@ path = "src/lib.rs"
 crate-type = ["staticlib", "cdylib", "lib"]
 
 [[bin]]
-name = "afwallet-client"
+name = "counterseal"
 path = "src/main.rs"
 
 [[bin]]
-name = "afwallet-keygencli"
+name = "keygencli"
 path = "src/keygencli.rs"
 
 [[bin]]
-name = "afwallet-signcli"
+name = "signcli"
 path = "src/signcli.rs"
 
 [dependencies]

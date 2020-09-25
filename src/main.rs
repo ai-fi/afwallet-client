@@ -165,10 +165,10 @@ fn display_qrcode() {
     }
 }
 fn main() {  
-    let matches = clap::App::new("Ai-Fi Vault for Desktop")
+    let matches = clap::App::new("Ai-Fi Counterseal for Desktop")
         .version("0.0.1")
         .author("Ai-Fi.net, Incopration")
-        .about("Ai-Fi Vault for Desktop")
+        .about("Ai-Fi Counterseal for Desktop")
         .arg(clap::Arg::with_name("open-browser")
             .short("b")
             .long("open-browser")
