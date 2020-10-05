@@ -21,6 +21,7 @@ pub struct PairingInfo {
 pub struct VaultStatus {
     //#[serde(rename(serialize = "server"))]
     pub is_ready: bool,
+    pub if_need_backup: bool,
     pub network: String,
     //#[serde(rename(serialize = "authInfo"))]
 }
@@ -70,9 +71,12 @@ pub fn vault_status(
         Err(_e) => String::from("bitcoin"),
         Ok(r) => match r { None => String::from("bitcoin"), Some(o) => o,},
     };
+    //super::token::set_need_backup(&state.db, &claim.sub, true);
+    let if_need_backup = super::token::is_need_backup(&state.db, &claim.sub);
 
     let status = VaultStatus{
         is_ready: is_ready,
+        if_need_backup: if_need_backup,
         network: network,
     };
     Ok(Json(status))
@@ -165,6 +169,7 @@ pub fn restore(
         &wallet_ids,
     )?;
 
+    super::token::set_need_backup(&state.db, &claim.sub, false)?;
 
     return Ok(Json(0));
 }

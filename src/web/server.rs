@@ -10,11 +10,8 @@
 use config;
 use rocket;
 use rocket::{Request, Rocket};
-use rocksdb;
 use rocket_contrib::serve::StaticFiles;
 
-use rusoto_core::Region;
-use rusoto_dynamodb::DynamoDbClient;
 use super::routes::*;
 use super::storage::db;
 use super::Config;
@@ -24,6 +21,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use std::sync::RwLock;
+use kv::*;
 // use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -140,19 +138,10 @@ fn get_db(settings: HashMap<String, String>) -> db::DB {
         .unwrap_or(&"dev".to_string())
         .to_string();
     match db_type {
-        "AWS" => {
-            let region_option = settings.get("aws_region");
-            match region_option {
-                Some(s) => {
-                    let region_res = Region::from_str(&s);
-                    match region_res {
-                        Ok(region) => db::DB::AWS(DynamoDbClient::new(region), env),
-                        Err(_e) => panic!("Set 'DB = AWS' but 'region' is not a valid value"),
-                    }
-                }
-                None => panic!("Set 'DB = AWS' but 'region' is empty"),
-            }
-        }
-        _ => db::DB::Local(rocksdb::DB::open_default("./db").unwrap()),
+        _ => {
+            let cfg = kv::Config::new("./db");
+            let store = kv::Store::new(cfg).unwrap();
+            db::DB::Local(store)
+        },
     }
 }

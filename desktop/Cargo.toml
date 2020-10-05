@@ -47,9 +47,7 @@ webbrowser = "0.5.5"
 
 rocket = { version = "0.4.2", default-features = false }
 rocket_contrib = { version = "0.4.2", default-features = false, features = ["json"] }
-rocksdb = "0.10.1"
-rusoto_dynamodb = "0.36.0"
-rusoto_core = "0.36.0"
+kv = "0.22.0"
 time-test = "0.2.1"
 error-chain = "0.12.0"
 jsonwebtoken = "6.0.1"

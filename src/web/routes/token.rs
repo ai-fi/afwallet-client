@@ -2,8 +2,12 @@
 #![allow(non_snake_case)]
 
 use super::super::Result;
+use rocket::State;
 use rocket_contrib::json::Json;
 use super::super::auth::jwt::Claims;
+use super::super::storage::db;
+use super::super::Config;
+use super::*;
 
 extern crate paillier;
 extern crate reqwest;
@@ -130,20 +134,52 @@ pub fn srp(
     return Ok(Json(resp));
 }
 
+pub fn set_need_backup(db: &db::DB, user: &String, need: bool) -> Result<()> {
+    
+    let vault_wallet_need_backup = String::from("vault_wallet_need_backup");
+    db::insert(
+        db,
+        user,
+        &vault_wallet_need_backup,
+        &VaultStruct::VaultNeedBackup,
+        &need,
+    )?;
+    Ok(())
+}
+
+pub fn is_need_backup(db: &db::DB, user: &String) -> bool {
+    
+    let vault_wallet_need_backup = String::from("vault_wallet_need_backup");
+    let result: Option<bool> = match db::get(db, user, &vault_wallet_need_backup, &VaultStruct::VaultNeedBackup) {
+        Err(_e) => None,
+        Ok(o) => o,
+    };
+    let if_need = match result {
+        None => true,
+        Some(need) => need,
+    };
+    return if_need;
+}
+
 #[post("/token/sss/share/save", format = "json", data = "<request>")]
 pub fn save(
-    _claim: Claims,
+    state: State<Config>,
+    claim: Claims,
     request: Json<SaveRequest>,
 ) -> Result<Json<SaveResponse>> {
     let client = AFCloudClient::new("https://registry.ai-fi.net");
     let path = "vpn/sss/share/save";
     let respstr = client.post(&path, request.0)?;
     let resp: SaveResponse = serde_json::from_str(&respstr)?;
+    if resp.code == 0 {
+        let _res = set_need_backup(&state.db, &claim.sub, false);
+    }
     return Ok(Json(resp));
 }
 
 #[post("/token/sss/share/retrieve/<filename>", format = "json", data = "<request>")]
 pub fn retrieve(
+    // state: State<Config>,
     _claim: Claims,
     filename: String,
     request: Json<RetrieveRequest>,
@@ -158,7 +194,8 @@ pub fn retrieve(
 
 #[post("/token/sss/share/update", format = "json", data = "<request>")]
 pub fn update(
-    _claim: Claims,
+    state: State<Config>,
+    claim: Claims,
     request: Json<SaveRequest>,
 ) -> Result<Json<SaveResponse>> {
     let client = AFCloudClient::new("https://registry.ai-fi.net");
@@ -166,5 +203,8 @@ pub fn update(
     let respstr = client.post(&path, request.0)?;
     //println!("{}", respstr);
     let resp: SaveResponse = serde_json::from_str(&respstr)?;
+    if resp.code == 0 {
+        let _res = set_need_backup(&state.db, &claim.sub, false);
+    }
     return Ok(Json(resp));
 }

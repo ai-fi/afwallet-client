@@ -11,7 +11,6 @@ extern crate config;
 extern crate curv;
 extern crate multi_party_ecdsa;
 extern crate rocket_contrib;
-extern crate rocksdb;
 extern crate uuid;
 extern crate zk_paillier;
 #[macro_use]
@@ -33,7 +32,7 @@ extern crate floating_duration;
 
 extern crate crypto;
 extern crate jsonwebtoken as jwt;
-extern crate rusoto_dynamodb;
+extern crate kv;
 extern crate hex;
 
 #[macro_use]

@@ -26,6 +26,7 @@ pub enum VaultStruct {
     VaultWalletIDs,
     VaultData,
     VaultWalletNetwork,
+    VaultNeedBackup,
 }
 
 use super::storage::*;

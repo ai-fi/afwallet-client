@@ -342,6 +342,7 @@ input[type=button] {
 <script type="text/javascript">
 let ec_not_json = -20001;
 var g_btcNetwork = 'bitcoin';
+var g_vaultStatus = null;
 
 $ = function(attr) {
     var elts = null;
@@ -441,15 +442,27 @@ function getDefaultWallet(cb) {
     });
 }
 
+function confirmBackup() {
+    let res = confirm("Your vault is not backup, please backup it first.");
+    if (res == 1) {
+        window.location.href = 'token.html?action=backup'
+    }
+}
+
 function doCheckStatus() {
     getVaultStatus(function(status, error) {
         if (error.code != 0 || status == null) {
             $('#page-loader').style.display = 'none';
             return;
         }
+        g_vaultStatus = status;
         if (status.is_ready) {
-            $('.pairing').style.display = 'none';
-            routeToSigning();
+            if (status.if_need_backup) {
+                confirmBackup();
+            } else {
+                $('.pairing').style.display = 'none';
+                routeToSigning();
+            }
         } else {
             checkStatus(10);
         }
@@ -459,19 +472,17 @@ function doCheckStatus() {
 function checkStatus(sec) {
     setTimeout(doCheckStatus, 1000 * sec);
 }
-var g_qrcode = null;
+
+
+
 function routeToPairing() {
-    if (g_qrcode != null) {
-        $('.pairing').style.display = 'inline';
-        return;
-    }
 
     getPairingInfo(function(pairingInfo, error) {
         $('#page-loader').style.display = 'none';
         if (error.code != 0 || pairingInfo == null) {
             return
         }
-
+        $(".qrcode").innerHTML = '';
         let connstr = JSON.stringify(pairingInfo);
         var qrcode = new QRCode($(".qrcode"), {
             width : 200,
@@ -479,7 +490,6 @@ function routeToPairing() {
         });
         qrcode.clear();
         qrcode.makeCode(connstr);
-        g_qrcode = qrcode;
         $('.pairing').style.display = 'inline';
     });
 
@@ -514,9 +524,14 @@ window.onload = function() {
             }
 
             g_btcNetwork = status.network;
+            g_vaultStatus = status;
             $('#lb-network-id').innerHTML = (g_btcNetwork == 'bitcoin') ? 'testnet' : 'bitcoin';
             if (status.is_ready) {
-                routeToSigning();
+                if (status.if_need_backup) {
+                    confirmBackup();
+                } else {
+                    routeToSigning();
+                }
             } else {
                 routeToPairing();
             }
@@ -541,10 +556,6 @@ function showParingQRCode() {
     $('.pairing').style.display = 'inline';
     $('.signing').style.display = 'none';
 
-    if (g_qrcode != null) {
-        $('.pairing').style.display = 'inline';
-        return;
-    }
     $('#page-loader').style.display = 'inline';
     getPairingInfo(function(pairingInfo, error) {
         $('#page-loader').style.display = 'none';
@@ -552,6 +563,7 @@ function showParingQRCode() {
             return
         }
 
+        $(".qrcode").innerHTML = '';
         let connstr = JSON.stringify(pairingInfo);
         var qrcode = new QRCode($(".qrcode"), {
             width : 200,
@@ -559,7 +571,6 @@ function showParingQRCode() {
         });
         qrcode.clear();
         qrcode.makeCode(connstr);
-        g_qrcode = qrcode;
         $('.pairing').style.display = 'inline';
     });
 }
@@ -573,11 +584,16 @@ function showCards() {
 
 
 function showBackup() {
-    $('.menu-container').style.display = 'none';
-    $('.pairing').style.display = 'none';
-    $('.signing').style.display = 'none';
+    // $('.menu-container').style.display = 'none';
+    // $('.pairing').style.display = 'none';
+    // $('.signing').style.display = 'none';
 
-    window.open("krtoken.html?action=backup", 'blank')
+    window.location.href = 'token.html?action=backup';
+    // window.open("token.html?action=backup", 'blank')
+}
+
+function showRecovery() {
+    window.location.href = 'token.html?action=restore';
 }
 
 function toggleMore() {
@@ -617,11 +633,11 @@ function doSwitchNetwork() {
             <li onclick="showParingQRCode(); return false;">
                 <a href="#">Show Paring QR Code</a>
             </li>
-            <li onclick="window.location.href='token.html?action=backup'">
-                <a href="#">Backup</a>
+            <li onclick="showBackup(); return false;">
+                <a>Backup</a>
             </li>
-            <li onclick="window.location.href='token.html?action=restore'">
-                <a href="#">Recovery</a>
+            <li onclick="showRecovery(); return false;">
+                <a>Recovery</a>
             </li>
         </ul>
     </div>

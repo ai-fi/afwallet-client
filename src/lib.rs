@@ -351,7 +351,7 @@ pub extern "C" fn ecdsa_verify_key(c_connstr: *const c_char, c_wallet_str: *cons
         0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f    
     ];
     let null: *mut c_void = std::ptr::null_mut();
-    let result = match sdk::sign::sign(&nc, &String::from(wallet_str), &path, None, &msg, callback, null) {
+    let result = match sdk::sign::sign(&nc, &String::from(wallet_str), &path, &msg, callback, null) {
         Err(_e) => -2,
         Ok(_s) => 0,
     };

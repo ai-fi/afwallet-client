@@ -6,5 +6,4 @@
 // License as published by the Free Software Foundation, either
 // version 3 of the License, or (at your option) any later version.
 //
-pub mod aws;
 pub mod db;
