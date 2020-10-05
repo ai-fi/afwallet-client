@@ -145,7 +145,7 @@ pub fn parse_address_path(path: &str) -> Option<Vec<i32>> {
 }
 
 
-pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, pcb: SignProgress, c_user_data: *mut c_void) -> Result<Signature> {
+pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, pkb: Option<&Vec<u8>>, msg: &Vec<u8>, pcb: SignProgress, c_user_data: *mut c_void) -> Result<Signature> {
     
     let (uuid, party_keys, shared_keys, party_id, mut vss_scheme_vec, paillier_key_vector, y_sum, chaincode): (
         String,
@@ -203,7 +203,14 @@ pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, p
     
     println!("PubKey derive at ({:}) is {:}", path, hex::encode(&BigInt::to_vec(&y_sum_child.bytes_compressed_to_big_int())));
 
-
+    if pkb != None {
+        let cpk = &pkb.unwrap()[..];
+        let v1 = BigInt::from(cpk);
+        let v2 = y_sum_child.bytes_compressed_to_big_int();
+        if !v1.eq(&v2) {
+            return Err(format_err!("Invalid Public Key"));
+        }
+    }
 
     // optimize!
     let g: GE = ECPoint::generator();
@@ -617,7 +624,7 @@ pub fn sign_psbt(nc: &NetworkClient, wallet: &String, network: bitcoin::network:
             );
             */
             
-            
+            let pkb = pubkey.to_bytes();
             let mut cache = bitcoin::util::bip143::SigHashCache::new(tx);
             let sighash_type = match input.sighash_type {
                 None => bitcoin::SigHashType::All,
@@ -632,7 +639,7 @@ pub fn sign_psbt(nc: &NetworkClient, wallet: &String, network: bitcoin::network:
 
             let spath = format!("{:}", path);
 
-            let signature = sign(nc, wallet, &spath, &msg_vec, pcb, c_user_data)?;
+            let signature = sign(nc, wallet, &spath, Some(&pkb), &msg_vec, pcb, c_user_data)?;
             
             let mut r_and_s = BigInt::to_vec(&signature.r.to_big_int());
             r_and_s.extend(BigInt::to_vec(&signature.s.to_big_int()));
