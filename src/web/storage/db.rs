@@ -7,7 +7,6 @@
 // version 3 of the License, or (at your option) any later version.
 //
 use serde;
-use super::*;
 use super::super::Result;
 use kv::*;
 
