@@ -147,7 +147,8 @@ pub fn parse_address_path(path: &str) -> Option<Vec<i32>> {
 
 pub fn sign(nc: &NetworkClient, wallet: &String, path: &String, msg: &Vec<u8>, pcb: SignProgress, c_user_data: *mut c_void) -> Result<Signature> {
     
-    let (uuid, party_keys, shared_keys, party_id, mut vss_scheme_vec, paillier_key_vector, y_sum, chaincode): (
+    let (uuid, _network, party_keys, shared_keys, party_id, mut vss_scheme_vec, paillier_key_vector, y_sum, chaincode): (
+        String,
         String,
         Keys,
         SharedKeys,

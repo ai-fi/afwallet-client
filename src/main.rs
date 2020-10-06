@@ -16,7 +16,6 @@ extern crate zk_paillier;
 #[macro_use]
 extern crate failure;
 
-#[macro_use]
 extern crate error_chain;
 
 extern crate serde;

@@ -18,10 +18,8 @@ use super::Config;
 
 
 use std::collections::HashMap;
-use std::str::FromStr;
 
 use std::sync::RwLock;
-use kv::*;
 // use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -95,7 +93,6 @@ pub fn get_server() -> Rocket {
                 vault::vault_status,
                 vault::vault_data,
                 vault::list_vaults,
-                vault::switch_network,
                 vault::restore,
                 keygen::keygen,
                 sign::sign,
@@ -133,10 +130,12 @@ fn get_db(settings: HashMap<String, String>) -> db::DB {
         .unwrap_or(&"local".to_string())
         .to_uppercase();
     let db_type = db_type_string.as_str();
+    /*
     let env = settings
         .get("env")
         .unwrap_or(&"dev".to_string())
         .to_string();
+    */
     match db_type {
         _ => {
             let cfg = kv::Config::new("./db");

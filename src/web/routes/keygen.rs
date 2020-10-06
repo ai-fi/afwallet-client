@@ -91,6 +91,7 @@ pub struct KeyGenContext {
     pub round3: Option<KeyGenRound3>,
     pub round4: Option<KeyGenRound4>,
     pub round5: Option<KeyGenRound5>,
+    pub network: String,
     pub next_round: i32, // 0
     pub party_num: i32, // 1
     pub parties: i32,
@@ -361,6 +362,7 @@ impl KeyGenContext {
             round3: None,
             round4: None,
             round5: None,
+            network: String::from("bitcoin"),
             next_round: 0,
             party_num: 1,
             parties: 2,
@@ -456,6 +458,7 @@ impl KeyGenContext {
         let party_keys = self.party_keys.clone();
         let party_num_int = self.party_num;
         let uuid = self.uuid.clone().unwrap();
+        let network = self.network.clone();
 
         let chaincode = self.round0.clone().unwrap().chaincode.unwrap();
         
@@ -467,7 +470,10 @@ impl KeyGenContext {
         let paillier_key_vec = self.round5.clone().unwrap().paillier_key_vec.unwrap();
        
 
-        let keygen_result = serde_json::to_string(&(uuid.clone(), party_keys,
+        let keygen_result = serde_json::to_string(&(
+            uuid.clone(), 
+            network, 
+            party_keys,
             shared_keys,
             party_num_int,
             vss_scheme_vec,
@@ -518,13 +524,18 @@ pub fn keygen(
     request: Json<RequestMessage>,
 ) -> Result<Json<(String, String)>> {
     
-    if request.uuid == "" && request.message == "init" {// Round 0
+    if request.uuid == "" && request.message.starts_with("init:") {// Round 0
+        
+        let v: Vec<&str> = request.message.split(':').collect();
+        if v.len() != 2 {
+            return Err(format_err!("Initial request is invalid ({:})", request.message));
+        }
         let uuid = Uuid::new_v4().to_string();
         let key = format!("keygen-{}-{}", claim.sub, uuid.clone());
         let chaincode = generate_chaincode();
 
         let mut context = KeyGenContext::new();
-
+        context.network = String::from(v[1]);
         let result = context.update(&uuid, &chaincode);
         if result.is_err() {
             return result;

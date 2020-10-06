@@ -66,7 +66,7 @@ use paillier::EncryptionKey;
 
 
 #[no_mangle]
-pub extern "C" fn get_master_address(c_wallet_json: *const c_char, c_network: *const c_char, c_error: *mut c_int) -> *mut c_char {
+pub extern "C" fn get_master_address(c_wallet_json: *const c_char, c_error: *mut c_int) -> *mut c_char {
 
     let raw_wallet_json = unsafe { CStr::from_ptr(c_wallet_json) };
     if raw_wallet_json.to_str().is_err() {
@@ -79,20 +79,8 @@ pub extern "C" fn get_master_address(c_wallet_json: *const c_char, c_network: *c
     }
     let wallet_json = raw_wallet_json.to_str().unwrap();
 
-    let raw_network = unsafe { CStr::from_ptr(c_network) };
-    if raw_network.to_str().is_err() {
-        unsafe {
-            *c_error = -1
-        };
-        let null: *const c_char = std::ptr::null();
-        let mutnull: *mut c_char = null.clone() as *mut c_char;
-        return mutnull;
-    }
-    let network_str = raw_network.to_str().unwrap();
-
-    let network = network_str.parse::<bitcoin::network::constants::Network>().unwrap();
-
-    let (_uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
+    let (_uuid, network_str, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
+        String,
         String,
         Keys,
         SharedKeys,
@@ -105,13 +93,15 @@ pub extern "C" fn get_master_address(c_wallet_json: *const c_char, c_network: *c
     unsafe {
         *c_error = 0;
     };
+    
+    let network = network_str.parse::<bitcoin::network::constants::Network>().unwrap();
     let addr = util::address::pubkey_to_address(&y_sum, &network);
 
     CString::new(addr).unwrap().into_raw()
 }
 
 #[no_mangle]
-pub extern "C" fn ecdsa_keygen(c_connstr: *const c_char, pcb: sdk::keygen::KeyGenProgress, c_user_data: *mut c_void, c_error: *mut c_int) -> *mut c_char {
+pub extern "C" fn ecdsa_keygen(c_connstr: *const c_char, c_network: *const c_char, pcb: sdk::keygen::KeyGenProgress, c_user_data: *mut c_void, c_error: *mut c_int) -> *mut c_char {
     
     let raw_connstr = unsafe { CStr::from_ptr(c_connstr) };
     if raw_connstr.to_str().is_err() {
@@ -124,9 +114,19 @@ pub extern "C" fn ecdsa_keygen(c_connstr: *const c_char, pcb: sdk::keygen::KeyGe
     }
 
     let connstr = raw_connstr.to_str().unwrap();
+
+
+    let raw_network = unsafe { CStr::from_ptr(c_network) };
+    let network = match raw_network.to_str() {
+        Err(_e) => String::from("bitcoin"),
+        Ok(s) => String::from(s),
+    };
+
+
+
     let nc = sdk::network::NetworkClient::new(connstr);
     
-    let result = sdk::keygen::keygen(&nc, pcb, c_user_data);
+    let result = sdk::keygen::keygen(&nc, &network, pcb, c_user_data);
     if result.is_err() {
         unsafe {
             *c_error = -2
@@ -141,7 +141,7 @@ pub extern "C" fn ecdsa_keygen(c_connstr: *const c_char, pcb: sdk::keygen::KeyGe
 }
 
 #[no_mangle]
-pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_network: *const c_char, c_psbt_str: *const c_char, pcb: sdk::sign::SignProgress, c_user_data: *mut c_void, c_error: *mut c_int)  -> *mut c_char {
+pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_psbt_str: *const c_char, pcb: sdk::sign::SignProgress, c_user_data: *mut c_void, c_error: *mut c_int)  -> *mut c_char {
     let raw_connstr = unsafe { CStr::from_ptr(c_connstr) };
     let opt_connstr = raw_connstr.to_str();
     if opt_connstr.is_err() {
@@ -165,19 +165,18 @@ pub fn ecdsa_sign(c_connstr: *const c_char, c_wallet_str: *const c_char, c_netwo
         return mutnull;
     }
     let wallet_str = opt_wallet_str.unwrap();
-
+    let (_uuid, network_str, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, _y_sum, _chaincode): (
+        String,
+        String,
+        Keys,
+        SharedKeys,
+        u32,
+        Vec<VerifiableSS>,
+        Vec<EncryptionKey>,
+        GE,
+        String,
+    ) = serde_json::from_str(&wallet_str).unwrap();
     
-    let raw_network_str = unsafe { CStr::from_ptr(c_network) };
-    let opt_network_str = raw_network_str.to_str();
-    if opt_network_str.is_err() {
-        unsafe {
-            *c_error = -1
-        };
-        let null: *const c_char = std::ptr::null();
-        let mutnull: *mut c_char = null.clone() as *mut c_char;
-        return mutnull;
-    }
-    let network_str = opt_network_str.unwrap();
     let network: bitcoin::network::constants::Network = network_str.parse::<bitcoin::network::constants::Network>().unwrap();
 
     let raw_psbt_str = unsafe { CStr::from_ptr(c_psbt_str) };
@@ -242,14 +241,27 @@ struct PSBTSummary {
 }
 
 #[no_mangle]
-pub extern "C" fn psbt_to_json(c_network: *const c_char, c_psbt: *const c_char) -> *mut c_char {
+pub extern "C" fn psbt_to_json(c_wallet_str: *const c_char, c_psbt: *const c_char) -> *mut c_char {
     
     let mutnull: *mut c_char = std::ptr::null_mut();
-    let raw_network = unsafe { CStr::from_ptr(c_network) };
-    let network_str = match raw_network.to_str() {
-        Ok(s) => s,
-        Err(_e) => return mutnull,
-    };
+    let raw_wallet_str = unsafe { CStr::from_ptr(c_wallet_str) };
+    let opt_wallet_str = raw_wallet_str.to_str();
+    if opt_wallet_str.is_err() {
+        return mutnull;
+    }
+    let wallet_str = opt_wallet_str.unwrap();
+    let (_uuid, network_str, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, _y_sum, _chaincode): (
+        String,
+        String,
+        Keys,
+        SharedKeys,
+        u32,
+        Vec<VerifiableSS>,
+        Vec<EncryptionKey>,
+        GE,
+        String,
+    ) = serde_json::from_str(&wallet_str).unwrap();
+    
     let network = match network_str.parse::<bitcoin::network::constants::Network>() {
         Ok(s) => s,
         Err(_e) => return mutnull,

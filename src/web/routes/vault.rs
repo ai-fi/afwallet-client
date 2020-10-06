@@ -56,21 +56,9 @@ pub fn vault_status(
         }
     } 
 
-    let vault_wallet_network = String::from("vault_wallet_network");
-    let nw_result: Result<Option<String>> = db::get(&state.db, &claim.sub, &vault_wallet_network, &VaultStruct::VaultWalletNetwork);
-    // let opt_network: Option<String> = match nw_result {
-    //     Err(_e) => Some(String::from("testnet")),
-    //     Ok(r) => r,
-    // };
-    // let network = match opt_network { 
-    //     None => String::from("testnet"), 
-    //     Some(s) => s, 
-    // };
+    
 
-    let network: String = match nw_result {
-        Err(_e) => String::from("bitcoin"),
-        Ok(r) => match r { None => String::from("bitcoin"), Some(o) => o,},
-    };
+    let network: String = String::from("bitcoin");
     //super::token::set_need_backup(&state.db, &claim.sub, true);
     let if_need_backup = super::token::is_need_backup(&state.db, &claim.sub);
 
@@ -172,16 +160,4 @@ pub fn restore(
     super::token::set_need_backup(&state.db, &claim.sub, false)?;
 
     return Ok(Json(0));
-}
-
-
-#[get("/vault/switch_network/<network>")]
-pub fn switch_network(
-    claim: Claims,
-    state: State<Config>,
-    network: String,
-) -> Result<Json<bool>> {
-    let vault_wallet_network = String::from("vault_wallet_network");
-    db::insert(&state.db, &claim.sub, &vault_wallet_network, &VaultStruct::VaultWalletNetwork, network)?;
-    return Ok(Json(true));
 }

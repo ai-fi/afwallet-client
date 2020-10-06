@@ -32,7 +32,8 @@ use std::os::raw::{c_int, c_void};
 
 pub type KeyGenProgress = extern "C" fn(c_int, *mut c_void);
 
-pub fn keygen(nc: &NetworkClient, pcb: KeyGenProgress, c_user_data: *mut c_void) -> Result<(
+pub fn keygen(nc: &NetworkClient, network: &String, pcb: KeyGenProgress, c_user_data: *mut c_void) -> Result<(
+    String,
     String,
     Keys,
     SharedKeys,
@@ -52,10 +53,12 @@ pub fn keygen(nc: &NetworkClient, pcb: KeyGenProgress, c_user_data: *mut c_void)
         share_count: parties as usize,
     };
 
+    let msg1 = format!("init:{}", network);
+    
     // round0: 
     let mut req = RequestMessage {
         uuid: String::from(""),
-        message: String::from("init"),
+        message: msg1,
     };
     let (uuid, chaincode): (String, String) = nc.keygen(&req)?;
     pcb(0, c_user_data);
@@ -188,11 +191,13 @@ pub fn keygen(nc: &NetworkClient, pcb: KeyGenProgress, c_user_data: *mut c_void)
         .map(|i| bc1_vec[i as usize].e.clone())
         .collect::<Vec<EncryptionKey>>();
         
-    Ok((uuid, party_keys,
-            shared_keys,
-            party_num_int,
-            vss_scheme_vec,
-            paillier_key_vec,
-            y_sum,
-            chaincode))
+    Ok((uuid, 
+        network.clone(), 
+        party_keys,
+        shared_keys,
+        party_num_int,
+        vss_scheme_vec,
+        paillier_key_vec,
+        y_sum,
+        chaincode))
 }

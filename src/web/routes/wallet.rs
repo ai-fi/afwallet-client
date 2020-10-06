@@ -29,10 +29,9 @@ use paillier::EncryptionKey;
 
 
 
-#[get("/wallet/default/<network>")]
+#[get("/wallet/default")]
 pub fn get_default(
     state: State<Config>,
-    network: String,
     // db_mtx: State<RwLock<HashMap<String, String>>>,
     claim: Claims,
 ) -> Result<Json<(String, String, String, String)>> {
@@ -46,7 +45,8 @@ pub fn get_default(
     .ok_or(format_err!("No data for such identifier {}", wallet_id))?;
     
 
-    let (uuid, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
+    let (uuid, network, _party_keys, _shared_keys, _party_id, mut _vss_scheme_vec, _paillier_key_vector, y_sum, _chaincode): (
+        String,
         String,
         Keys,
         SharedKeys,

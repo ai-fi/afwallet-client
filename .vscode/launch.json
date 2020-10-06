@@ -26,15 +26,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'afwallet-client'",
+            "name": "Debug executable 'counterseal'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=afwallet-client",
+                    "--bin=counterseal",
                     "--package=afwallet-client"
                 ],
                 "filter": {
-                    "name": "afwallet-client",
+                    "name": "counterseal",
                     "kind": "bin"
                 }
             },
@@ -44,15 +44,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'afwallet-keygencli'",
+            "name": "Debug executable 'keygencli'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=afwallet-keygencli",
+                    "--bin=keygencli",
                     "--package=afwallet-client"
                 ],
                 "filter": {
-                    "name": "afwallet-keygencli",
+                    "name": "keygencli",
                     "kind": "bin"
                 }
             },
@@ -62,15 +62,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'afwallet-signcli'",
+            "name": "Debug executable 'signcli'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=afwallet-signcli",
+                    "--bin=signcli",
                     "--package=afwallet-client"
                 ],
                 "filter": {
-                    "name": "afwallet-signcli",
+                    "name": "signcli",
                     "kind": "bin"
                 }
             },
@@ -80,16 +80,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'afwallet-client'",
+            "name": "Debug unit tests in executable 'counterseal'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=afwallet-client",
+                    "--bin=counterseal",
                     "--package=afwallet-client"
                 ],
                 "filter": {
-                    "name": "afwallet-client",
+                    "name": "counterseal",
                     "kind": "bin"
                 }
             },

@@ -318,6 +318,7 @@ pub struct SignTask {
     pub round8: SignRound8,
     pub wallet_uuid: String,
     pub uuid: String,
+    pub network: String,
     pub next_round: i32,
 
     pub threshold: u32,
@@ -333,7 +334,8 @@ pub struct SignTask {
 impl SignTask {
     pub fn new(wallet_data: &str) -> Result<SignTask> {
         
-        let (uuid, party_keys, shared_keys, party_id, vss_scheme_vec, paillier_key_vector, y_sum, chaincode): (
+        let (uuid, network, party_keys, shared_keys, party_id, vss_scheme_vec, paillier_key_vector, y_sum, chaincode): (
+            String,
             String,
             Keys,
             SharedKeys,
@@ -356,6 +358,7 @@ impl SignTask {
             round8: SignRound8::new(),
             wallet_uuid: uuid,
             uuid: String::new(),
+            network: network,
             next_round: 0,
             threshold: 1,
         
