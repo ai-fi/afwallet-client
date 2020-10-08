@@ -94,6 +94,7 @@ pub fn get_server() -> Rocket {
                 vault::vault_data,
                 vault::list_vaults,
                 vault::restore,
+                vault::erase_all_data,
                 keygen::keygen,
                 sign::sign,
                 wallet::get_default,

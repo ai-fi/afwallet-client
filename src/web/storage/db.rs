@@ -74,3 +74,23 @@ where
         }
     }
 }
+
+pub fn del(db: &DB, user_id: &str, id: &str, name: &dyn MPCStruct) -> bool
+{
+    match db {
+        DB::Local(store) => {
+            let wallet_bucket = store.bucket::<String, String>(Some("wallet"));
+            if wallet_bucket.is_err() {
+                return false;
+            }
+            let identifier = idify(user_id, id, name);
+            debug!("Getting from db ({})", identifier);
+            let result = wallet_bucket.unwrap().remove(identifier);
+            let success = match result {
+                Err(_e) => false,
+                Ok(_) => true,
+            };
+            return success;
+        }
+    }
+}

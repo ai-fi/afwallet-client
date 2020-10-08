@@ -161,3 +161,21 @@ pub fn restore(
 
     return Ok(Json(0));
 }
+
+
+#[delete("/vault/erase")]
+pub fn erase_all_data(
+    claim: Claims,
+    state: State<Config>,
+) -> Result<Json<bool>> {
+    let vault_wallet_ids_id = String::from("vault_wallet_ids_id");
+    let result: Vec<String> = db::get(&state.db, &claim.sub, &vault_wallet_ids_id, &VaultStruct::VaultWalletIDs)?
+    .ok_or(format_err!("No data for such identifier {}", vault_wallet_ids_id))?;
+    for id in result {
+        let _ = db::del(&state.db, &claim.sub, &id, &VaultStruct::VaultData);
+    }
+    let res = db::del(&state.db, &claim.sub, &vault_wallet_ids_id, &VaultStruct::VaultWalletIDs);
+
+    let _ = super::token::set_need_backup(&state.db, &claim.sub, true);
+    return Ok(Json(res));
+}
