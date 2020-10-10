@@ -42,7 +42,7 @@
 
       $('#token-guide-card').css({display: 'none'});
       $('#token-credential-card').css({display: 'block'});
-      $('#token-credential-card-title').text('Backup as Token');
+      $('#token-credential-card-title').text('Backup as Krypton Token');
       $('#token-credential-card-buttons').html('&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-primary"\n' +
         '                    onclick="backupClicked()" id="open-button">Backup</button>&nbsp;&nbsp;&nbsp;&nbsp;\n' +
         '            <div id="open-indicator" class="spinner-border" role="status" style="color: #00aaff; display: none;">\n' +
@@ -57,7 +57,7 @@
 
       $('#token-guide-card').css({display: 'none'});
       $('#token-credential-card').css({display: 'block'});
-      $('#token-credential-card-title').text('Restore from Token');
+      $('#token-credential-card-title').text('Restore from Krypton Token');
       $('#btn-generate-random-entropy-salt').css({display: 'none'});
       //$('btn-show-password').css({display: 'none'});
       
@@ -148,13 +148,13 @@
           <h4 class="card-title" style="text-align: center;"><a href="https://ai-fi.net/help/anonymouscloudstorage.html#ai-fi-krypton-token-types" target="_blank">What's Krypton Token?</a></h4>
           <p class="card-text" style="text-align: center; line-height: 64px;">
             <button class="btn btn-success"
-                    onclick="gotoBackup()" id="goto-create-button">Create New Token</button> <br />
+                    onclick="gotoBackup()" id="goto-create-button">Create New Krypton Token</button> <br />
             <button class="btn btn-primary"
-                    onclick="gotoRestore()" id="goto-open-button">Open Existing Token</button>
+                    onclick="gotoRestore()" id="goto-open-button">Retrieve Existing Krypton Token</button>
           </p>
         </div>
         <div class="card-body" style="display: none;" id="token-credential-card">
-          <h4 class="card-title" id="token-credential-card-title">Create New Token</h4>
+          <h4 class="card-title" id="token-credential-card-title">Create New Krypton Token</h4>
 
           <div class="card-text">
 
@@ -164,7 +164,7 @@
             <br />
             <label for="passphrase-tf" class="sr-only">Passphrase</label>
             <input type="text" id="passphrase-tf" class="form-control" placeholder="Passphrase" required />
-            <div style="text-align: right;"><a id="btn-show-password" href="#" onclick="togglePasswordVisiable()">Hide Password</a></div>
+            <div style="text-align: right;"><a id="btn-show-password" href="#" onclick="togglePasswordVisiable()">Hide Passphrase</a></div>
             <div style="text-align: right;" id="strength_human"></div>
           </div>
           <div style="text-align: center; line-height: 44px;" id="token-credential-card-buttons">

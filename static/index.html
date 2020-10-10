@@ -426,7 +426,7 @@ function getDefaultWallet(cb) {
 }
 
 function confirmBackup() {
-    let res = confirm("Your haven't backup your vault, please backup it first.");
+    let res = confirm("You haven't backed up your local signer data. Please carry it out or ignore explicitly.");
     if (res == 1) {
         window.location.href = 'token.html?action=backup'
     } else {
@@ -614,7 +614,7 @@ function eraseAllData() {
     <div class="menu-container">
         <ul class="menu-list">
             <li onclick="showCards(); return false;">
-                <a href="#">Show Cards</a>
+                <a href="#">Show Main Screen</a>
             </li>
             <li onclick="showParingQRCode(); return false;">
                 <a href="#">Show Paring QR Code</a>
@@ -654,13 +654,13 @@ function eraseAllData() {
                 </div>
                 <div class="qrtitle">Pair with your Phone</div>
                 <div class="qrtips">
-                    <p>你的Ai-Fi Counterseal还没有初始化.
-                    请在你手机上用Ai-Fi Counterseal扫描这个二维码进行配对.</p>
+                    <p>Your Ai-Fi Counterseal components not yet initialized.
+                        Scan this QR code from the Ai-Fi Counterseal app on your phone in order to pair with the Secondary.</p>
                     <p>
-                        如果你已经初始化过Ai-Fi Counterseal，你可以尝试<a href="token.html?action=restore">恢复已有的Ai-Fi Counterseal</a>.
+                        You can try to <a href="token.html?action=restore">restore from your counterseal backups</a> if prior versions are available.
                     </p>
                     <p>
-                        如果你还有疑问，请<a href="#">点击此处了解更多</a>.
+                        <a href="#">Find our more here</a>.
                     </p>
                 </div>
             </div>

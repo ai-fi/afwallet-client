@@ -86,12 +86,12 @@ function shareToString(share) {
 
 function doRestoreFromToken() {
   if (restClient.getSalt() == defaultTokenTypePrefix) {
-    showErrorNotify("Entropy Salt could not be empty.");
+    showErrorNotify("Entropy Salt must not be empty.");
     $('#open-button').removeAttr('disabled');
     return;
   };
   if (!restClient.getPassphrase() || restClient.getPassphrase().length < 6) {
-    showErrorNotify("Passphrase could not be empty.");
+    showErrorNotify("Passphrase must not be empty.");
     $('#open-button').removeAttr('disabled');
     return;
   }
@@ -103,7 +103,7 @@ function doRestoreFromToken() {
     $('#open-indicator').css({display: 'none'});
     if(result.code != 0) {
       if (result.code == -1) {
-        showErrorNotify("Krypton Token does not exist.")
+        showErrorNotify("Krypton Token not found. Please check your passphrase and entropy salt.")
         return;
       }
       showError(result);
@@ -120,7 +120,7 @@ function doRestoreFromToken() {
         return;
       }
 
-      showInfoNotify("Restore succeed. Auto back to workspace 5 seconds later.");
+      showInfoNotify("Restore succeeded. Back to main screen 5 seconds later.");
       setTimeout(function() {
         window.location.href='index.html'
       }, 5000);
@@ -131,12 +131,12 @@ function doRestoreFromToken() {
 function doBackupAsToken() {
 
   if (restClient.getSalt() == defaultTokenTypePrefix) {
-    showErrorNotify("Entropy Salt could not be empty.");
+    showErrorNotify("Entropy Salt must not be empty.");
     $('#open-button').removeAttr('disabled');
     return;
   };
   if (!restClient.getPassphrase() || restClient.getPassphrase().length < 6) {
-    showErrorNotify("Passphrase too weak.");
+    showErrorNotify("Passphrase too weak to protect. Please strengthen it.");
     $('#open-button').removeAttr('disabled');
     return;
   }
@@ -150,7 +150,7 @@ function doBackupAsToken() {
       showError(result);
       return;
     }
-    showInfoNotify("Backup succeed. Auto back to workspace 5 seconds later.");
+    showInfoNotify("Backup succeeded. Back to main screen 5 seconds later.");
     setTimeout(function() {
       window.location.href='index.html'
     }, 5000);
