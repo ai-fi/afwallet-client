@@ -177,6 +177,7 @@ function initialUI(cb) {
   }
 
   if (action == 'backup') {
+    $('#btn-generate-salt').css({display: 'inline'});
     gotoBackup();
     restClient.listVaults(function(result) {
       if (result.code == 0) {
