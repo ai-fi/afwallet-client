@@ -60,7 +60,7 @@ C.F.R. §227.7202, as applicable. Consistent with 48 C.F.R. §12.212 or 48 C.F.R
 This License will be governed by and construed in accordance with the laws of the State of California, excluding its conflict of law principles. This License shall not be governed by the United Nations Convention on Contracts for the International Sale of Goods, the application of which is expressly excluded. If you are a consumer based in the United Kingdom, this License will be governed by the laws of the jurisdiction of your residence. If for any reason a court of
 competent jurisdiction finds any provision, or portion thereof, to be unenforceable, the remainder of this License shall continue in full force and eﬀect.
 
-##### 12. Complete Agreement;
+##### 12. Complete Agreement.
 Governing Language. This License constitutes the entire agreement between the parties with respect to the use of the Ai-Fi Software licensed hereunder and supersedes all prior or contemporaneous understandings regarding such subject matter. No amendment to or modification of this License will be binding unless in writing and signed by Ai-Fi. Any translation of this License is done for local requirements and in the event of a dispute between the English and any non-English versions, the English version of this License shall govern, to the extent not prohibited by local law in your jurisdiction.
 
 ##### 13. Third Party Notices.
