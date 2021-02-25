@@ -29,7 +29,8 @@ A. The Ai-Fi Software may enable access to Ai-Fi and third party services and we
 
 B. By using this software in connection with an Ai-Fi ID, you agree to the applicable terms and conditions for that account, which you may access and review at https://ai-fi.net/200501-terms.html. If you do not agree to the applicable terms and conditions for such an account, do not use the Ai-Fi Software in connection with that account.
 
-##### 6. Termination. This License is eﬀective until terminated. Your rights under this License will terminate automatically without notice from Ai-Fi if you fail to comply with any term(s) of this License. Upon the termination of this License, you must cease all use of the Ai-Fi Software and destroy all copies, full or partial, of the Ai-Fi Software. Sections 4, 5, 6, 7, 8, 11 and 12 of this License shall survive any such termination.
+##### 6. Termination. 
+This License is eﬀective until terminated. Your rights under this License will terminate automatically without notice from Ai-Fi if you fail to comply with any term(s) of this License. Upon the termination of this License, you must cease all use of the Ai-Fi Software and destroy all copies, full or partial, of the Ai-Fi Software. Sections 4, 5, 6, 7, 8, 11 and 12 of this License shall survive any such termination.
 
 ##### 7. Disclaimer of Warranties.
 A. If you are a customer who is a consumer (someone who uses the Ai-Fi Software outside of your trade, business or profession), you may have legal rights in your country of residence which would prohibit the following limitations from applying to you, and where prohibited they will not apply to you. To find out more about rights, you should contact a local consumer advice organization.
